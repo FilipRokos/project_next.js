@@ -24,7 +24,6 @@ export const authOptions: NextAuthOptions = {
 
     callbacks: {
         async jwt({ token, account }) {
-            // poprvé po přihlášení
             if (account) {
                 token.accessToken = account.access_token;
                 token.refreshToken = account.refresh_token;
