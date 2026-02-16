@@ -22,8 +22,10 @@ export default function Home() {
                             Vítej
                         </h1>
                         <p className="text-gray-500 mb-6">
+
                             Přihlas se pomocí Google účtu
                         </p>
+
 
                         <button
                             onClick={() => signIn("google")}
