@@ -16,6 +16,15 @@ export interface DefaultSession {
     expires: ISODateString
 }
 
+declare module "next-auth" {
+    interface Session {
+        accessToken?: string;
+        user?: NextAuth["user"] & {
+            id?: string;
+        };
+    }
+}
+
 declare module "next-auth/jwt" {
     interface JWT {
         accessToken?: string;
