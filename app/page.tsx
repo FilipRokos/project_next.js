@@ -58,7 +58,7 @@ export default function Home() {
                             Přihlášen
                         </h1>
                         <p className="text-gray-500 mb-6 break-all">
-                            {session.user?.email}
+                            {session.user?.id}
                         </p>
 
                         <button
