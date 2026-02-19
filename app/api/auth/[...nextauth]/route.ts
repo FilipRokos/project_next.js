@@ -75,12 +75,12 @@ export const authOptions: NextAuthOptions = {
                                     { merge: true }
                                 );
                         } catch (err) {
-                            console.error("❌ Failed to store user:", err);
+                            console.error("Failed to store user:", err);
                         }
                     }
                 }
             } catch (err) {
-                console.error("❌ JWT callback crashed:", err);
+                console.error("JWT callback crashed:", err);
             }
 
             return token;

@@ -6,6 +6,7 @@ Progress
 - firestore database link :checkmark:
 - firestore database user table :checkmark---tested:
 - firestore database user secrets :checkmark---tested:
+
 ToDo
 - intro page finish 2/3
   - info about the app before logging in
@@ -25,6 +26,8 @@ ToDo
   - find a good ocr
   - implement the ocr on the picture 
 - google drive 
+  - decide between doing an imaginary folder system that will show only in app ----> easy /
+    do a one that will show even in the google drive ----> harder 
   - save the picture file
   - option with delet after some date 
   - delete option
