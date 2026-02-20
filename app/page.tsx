@@ -1,8 +1,7 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
-import callbackUrl = mockProviders.github.callbackUrl;
-import {mockProviders} from "next-auth/client/__tests__/helpers/mocks";
+
 
 export default function Home() {
     const { data: session, status } = useSession();
