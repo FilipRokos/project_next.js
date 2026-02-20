@@ -1,6 +1,8 @@
 "use client";
 
 import { signIn, signOut, useSession } from "next-auth/react";
+import callbackUrl = mockProviders.github.callbackUrl;
+import {mockProviders} from "next-auth/client/__tests__/helpers/mocks";
 
 export default function Home() {
     const { data: session, status } = useSession();
@@ -28,8 +30,7 @@ export default function Home() {
 
 
                         <button
-                            onClick={() => signIn("google")}
-                            className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition"
+                            onClick={() => signIn("google", { callbackUrl: "/mainpage" })}                            className="w-full flex items-center justify-center gap-3 rounded-xl border border-gray-300 px-4 py-3 font-medium text-gray-700 hover:bg-gray-50 hover:shadow-md transition"
                         >
                             <svg className="h-5 w-5" viewBox="0 0 48 48">
                                 <path
