@@ -4,55 +4,57 @@ import { signIn, useSession } from "next-auth/react";
 import React, { JSX, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useInView, type HTMLMotionProps } from "framer-motion";
+import {AnimationDefinition} from "motion";
 
 
+const MotionMap = {
+    div: motion.div,
+    section: motion.section,
+    main: motion.main,
+    header: motion.header,
+    footer: motion.footer,
+    article: motion.article,
+    nav: motion.nav,
+    ul: motion.ul,
+    li: motion.li,
+    span: motion.span,
+} as const;
 
-type MotionTag = Extract<keyof JSX.IntrinsicElements, keyof typeof motion>;
+type MotionTag = keyof typeof MotionMap;
 
-type RevealProps<T extends MotionTag = "div"> = {
-    as?: T;
-    delay?: number;
+type RevealProps = {
+    delay?: number; // ms
     className?: string;
     amount?: number;
     margin?: string;
     y?: number;
     duration?: number;
     children: React.ReactNode;
-} & Omit<React.ComponentPropsWithoutRef<(typeof motion)[T]>, "initial" | "animate" | "transition">;
+};
 
-export function Reveal<T extends MotionTag = "div">({
-                                                        as,
-                                                        delay = 0,
-                                                        className = "",
-                                                        amount = 0.12,
-                                                        margin = "0px 0px -10% 0px",
-                                                        y = 18,
-                                                        duration = 0.65,
-                                                        children,
-                                                        ...rest
-                                                    }: RevealProps<T>) {
-    // useInView chce RefObject<Element | null>, motion komponenta chce konkrétnější typ.
-    // Nejjednodušší: držet Element a při předání do ref udělat malý cast.
-    const ref = useRef<HTMLElement | null>(null);
-    //@ts-ignore
-    const isInView = useInView(ref, { amount, margin });
-    const MotionComp = useMemo(() => {
-        const key = (as ?? "div") as MotionTag;
-        return motion[key];
-    }, [as]);
-    //@ts-ignore
-        return (
-            <MotionComp
-                ref={ref}
-                className={["h-full", className].join(" ")}
-                initial={false}
-                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y }}
-                transition={{ duration, ease: "easeOut", delay: delay / 1000 }}
-                {...rest}
-            >
-                {children}
-            </MotionComp>
-        );
+export function Reveal({
+                           delay = 0,
+                           className = "",
+                           amount = 0.12,
+                           margin = "0px 0px -10px 0px",
+                           y = 18,
+                           duration = 0.65,
+                           children,
+                       }: RevealProps) {
+    const ref = useRef<HTMLDivElement | null>(null);
+    const isInView = useInView(ref, { amount, margin: "0px 0px -10px 0px" });
+
+    return (
+        <motion.div
+            ref={ref}
+            className={["h-full", className].join(" ")}
+            initial={false}
+            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y }}
+            transition={{ duration, ease: "easeOut", delay: delay / 1000 }}
+        >
+            {children}
+        </motion.div>
+    );
 }
 export default function Home() {
     const { data: session, status } = useSession();
