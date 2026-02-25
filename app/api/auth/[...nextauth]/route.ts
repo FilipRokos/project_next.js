@@ -2,9 +2,9 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { firestore } from "@/lib/firebase-admin";
-
-
-import { encrypt } from "@/lib/enc"; // your AES encrypt function
+import { encrypt } from "@/lib/enc";
+import { createDriveFolder } from "@/lib/drive";
+import admin from "firebase-admin";
 
 export const authOptions: NextAuthOptions = {
     providers: [
@@ -22,65 +22,71 @@ export const authOptions: NextAuthOptions = {
         }),
     ],
 
-    session: {
-        strategy: "jwt", // use JWT session
-    },
-
+    session: { strategy: "jwt" },
 
     callbacks: {
         async jwt({ token, account, profile }) {
-            try {
-                if (account && profile) {
-                    if (profile.sub) {
-                        token.id = profile.sub;
-                    }
-                    console.log("refresh_token:", account?.refresh_token);
-                    if (account.access_token) {
-                        token.accessToken = account.access_token;
-                    }
+            // account/profile are typically present only on initial sign-in
+            if (account && profile?.sub) {
+                const userId = profile.sub;
 
-                    if (profile.sub) {
-                        if (account.refresh_token) {
-                            try {
-                                const encrypted = encrypt(account.refresh_token);
+                // Access token (short-lived)
+                if (account.access_token) token.accessToken = account.access_token;
 
-                                await firestore
-                                    .collection("secrets")
-                                    .doc(profile.sub)
-                                    .set(
-                                        {
-                                            refreshToken: encrypted,
-                                            updatedAt: new Date(),
-                                        },
-                                        { merge: true }
-                                    );
-                            } catch (err) {
-                                console.error("Failed to store refresh token:", err);
-                            }
-                        }
+                // Refresh token (long-lived) - only shows up first consent or when re-consented
+                if (account.refresh_token) {
+                    const encrypted = encrypt(account.refresh_token);
+                    await firestore
+                        .collection("secrets")
+                        .doc(userId)
+                        .set(
+                            { refreshToken: encrypted, updatedAt: admin.firestore.FieldValue.serverTimestamp() },
+                            { merge: true }
+                        );
+                }
 
+                // Read existing user doc to avoid recreating folder + overwriting createdAt
+                const userRef = firestore.collection("users").doc(userId);
+                const userSnap = await userRef.get();
+                const existing = userSnap.exists ? userSnap.data() : null;
 
-                        try {
-                            await firestore
-                                .collection("users")
-                                .doc(profile.sub)
-                                .set(
-                                    {
-                                        email: profile.email,
-                                        name: profile.name,
-                                        drive: { rootFolderId: "root", rootPath: "/" },
-                                        updatedAt: new Date(),
-                                        createdAt: new Date(),
-                                    },
-                                    { merge: true }
-                                );
-                        } catch (err) {
-                            console.error("Failed to store user:", err);
-                        }
+                // Only create Drive folder if we don't have one saved yet
+                let driveRootFolderId = existing?.drive?.rootFolderId as string | undefined;
+                let driveRootPath = existing?.drive?.rootPath as string | undefined;
+
+                if (!driveRootFolderId) {
+                    if (!account.access_token) {
+                        // can't create folder without an access token right now
+                        // keep user as-is; they can re-login or you can handle later via refresh token
+                        console.warn("No access_token; cannot create Drive folder on sign-in");
+                    } else {
+                        const folderName = process.env.DRIVE_ROOT_FOLDER_NAME ?? "MyApp";
+                        const folder = await createDriveFolder({
+                            accessToken: account.access_token,
+                            name: folderName,
+                            parentId: "root",
+                        });
+
+                        driveRootFolderId = folder.id;
+                        // Drive doesn't have real paths; this is your "virtual path"
+                        driveRootPath = `/${folder.name}`;
                     }
                 }
-            } catch (err) {
-                console.error("JWT callback crashed:", err);
+
+                // Upsert user doc (don't overwrite createdAt if it already exists)
+                await userRef.set(
+                    {
+                        email: profile.email ?? null,
+                        name: profile.name ?? null,
+                        drive: {
+                            rootFolderId: driveRootFolderId ?? existing?.drive?.rootFolderId ?? "root",
+                            rootPath: driveRootPath ?? existing?.drive?.rootPath ?? "/",
+                        },
+                        updatedAt: admin.firestore.FieldValue.serverTimestamp(),
+                        ...(existing ? {} : { createdAt: admin.firestore.FieldValue.serverTimestamp() }),
+                    },
+                    { merge: true }
+                );
             }
 
             return token;
@@ -88,13 +94,15 @@ export const authOptions: NextAuthOptions = {
 
         async session({ session, token }) {
             if (session.user) {
-                session.user.id = token.sub
-                session.accessToken = token.accessToken ?? "";
+                // token.sub is the user id
+                (session.user as any).id = token.sub;
             }
+            (session as any).accessToken = (token as any).accessToken ?? "";
             return session;
-        }
+        },
     },
 };
+
 
 
 const handler = NextAuth(authOptions);

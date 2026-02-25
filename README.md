@@ -1,19 +1,21 @@
 Progress
-- intro page :questionmark -- 1/3:
+- intro page :questionmark -- 2.5/3:
 - google login via nextAuth :checkmark:
 - google Account info --> session :checkmark---tested:
 - firestore database :checkmark:
 - firestore database link :checkmark:
 - firestore database user table :checkmark---tested:
 - firestore database user secrets :checkmark---tested:
+  after login page
+  - page structure
+  - buttons
+  - settings 1/2
 
 ToDo
-- intro page finish 2/3
+- intro page finish 0.5/3
   - info about the app before logging in
   - animations to it 
 - after login page
-  - page structure
-  - buttons 
   - settings
   - account deletion
   - take a picture of the product 
