@@ -5,53 +5,55 @@ import React, { JSX, useEffect, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { motion, useInView, type HTMLMotionProps } from "framer-motion";
 
-type RevealProps<T extends keyof JSX.IntrinsicElements = "div"> = {
+
+
+type MotionTag = Extract<keyof JSX.IntrinsicElements, keyof typeof motion>;
+
+type RevealProps<T extends MotionTag = "div"> = {
     as?: T;
-    delay?: number; // ms
+    delay?: number;
     className?: string;
-
-    amount?: number; // 0–1 (kolik musí být vidět)
-    margin?: string; // rootMargin
-    y?: number; // posun v px
-    duration?: number; // s
+    amount?: number;
+    margin?: string;
+    y?: number;
+    duration?: number;
     children: React.ReactNode;
-} & Omit<HTMLMotionProps<T>, "initial" | "animate" | "transition">;
+} & Omit<React.ComponentPropsWithoutRef<(typeof motion)[T]>, "initial" | "animate" | "transition">;
 
-export function Reveal<T extends keyof JSX.IntrinsicElements = "div">({
-                                                                          as,
-                                                                          delay = 0,
-                                                                          className = "",
-                                                                          amount = 0.12,
-                                                                          margin = "0px 0px -10% 0px",
-                                                                          y = 18,
-                                                                          duration = 0.65,
-                                                                          children,
-                                                                          ...rest
-                                                                      }: RevealProps<T>) {
+export function Reveal<T extends MotionTag = "div">({
+                                                        as,
+                                                        delay = 0,
+                                                        className = "",
+                                                        amount = 0.12,
+                                                        margin = "0px 0px -10% 0px",
+                                                        y = 18,
+                                                        duration = 0.65,
+                                                        children,
+                                                        ...rest
+                                                    }: RevealProps<T>) {
+    // useInView chce RefObject<Element | null>, motion komponenta chce konkrétnější typ.
+    // Nejjednodušší: držet Element a při předání do ref udělat malý cast.
     const ref = useRef<HTMLElement | null>(null);
-
-    // ✅ když element ve viewportu: true, když mimo: false
+    //@ts-ignore
     const isInView = useInView(ref, { amount, margin });
-
-    const MotionComp: any = useMemo(() => {
-        const key = (as ?? "div") as any;
-        return (motion as any)[key] ?? motion.div;
+    const MotionComp = useMemo(() => {
+        const key = (as ?? "div") as MotionTag;
+        return motion[key];
     }, [as]);
-
-    return (
-        <MotionComp
-            ref={ref as any}
-            className={["h-full", className].join(" ")} // ✅ allow grid items to stretch
-            initial={false} // důležité: ať to nerenderuje "0 opacity" při hydrataci divně
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y }}
-            transition={{ duration, ease: "easeOut", delay: delay / 1000 }}
-            {...rest}
-        >
-            {children}
-        </MotionComp>
-    );
+    //@ts-ignore
+        return (
+            <MotionComp
+                ref={ref}
+                className={["h-full", className].join(" ")}
+                initial={false}
+                animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y }}
+                transition={{ duration, ease: "easeOut", delay: delay / 1000 }}
+                {...rest}
+            >
+                {children}
+            </MotionComp>
+        );
 }
-
 export default function Home() {
     const { data: session, status } = useSession();
     const router = useRouter();
