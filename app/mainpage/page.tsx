@@ -39,7 +39,7 @@ export default function MainPage() {
     const initials = userName
         .split(" ")
         .slice(0, 2)
-        .map((p) => p[0]?.toUpperCase())
+        .map((p:string) => p[0]?.toUpperCase())
         .join("");
 
     return (

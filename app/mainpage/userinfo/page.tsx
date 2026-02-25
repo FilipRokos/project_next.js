@@ -48,7 +48,7 @@ export default function AccountPage() {
     const initials = userName
         .split(" ")
         .slice(0, 2)
-        .map((p) => p[0]?.toUpperCase())
+        .map((p:string) => p[0]?.toUpperCase())
         .join("");
 
     // NextAuth session obvykle neobsahuje provider přímo.
