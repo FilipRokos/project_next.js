@@ -13,7 +13,7 @@ export async function Post(req: Request) {
     const file = form.get("file");
     const path = form.get("path");
     const filename = form.get("filename");
-    const userId = form.get("userId");
+    const userId = form.get("userId") as string;
 
     const userDoc = await firestore
         .collection("users")
