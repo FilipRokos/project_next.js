@@ -1,9 +1,10 @@
 "use client";
 
 import { useSession, signOut } from "next-auth/react";
-import { FaUser, FaCog, FaPlus, FaFileAlt } from "react-icons/fa";
-import { useEffect, useMemo } from "react";
+import { FaUser, FaCog, FaPlus, FaFileAlt, FaTimes } from "react-icons/fa";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import ImageDropUpload from "../../components/form/ImageDropUpload";
 
 const cx = (...classes: Array<string | false | undefined>) =>
     classes.filter(Boolean).join(" ");
@@ -12,6 +13,7 @@ export default function MainPage() {
     const router = useRouter();
     const pathname = usePathname();
     const { data: session, status } = useSession();
+    const [isUploadOpen, setIsUploadOpen] = useState(false);
 
     useEffect(() => {
         if (status !== "loading" && !session) router.push("/");
@@ -39,19 +41,24 @@ export default function MainPage() {
     const initials = userName
         .split(" ")
         .slice(0, 2)
-        .map((p:string) => p[0]?.toUpperCase())
+        .map((p: string) => p[0]?.toUpperCase())
         .join("");
+
+    // ⚠️ DŮLEŽITÉ: userId si u sebe držíš ve formData jako "userId".
+    // Tady beru session.user.id – pokud to máš jinak (např. session.user.uid),
+    // tak to jen přepiš na správný field.
+    const userId = (session as any)?.user?.id as string;
 
     return (
         <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 text-gray-900">
-            {/* Decorative blobs like Home */}
+            {/* Decorative blobs */}
             <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10">
                 <div className="blob blob-1" />
                 <div className="blob blob-2" />
                 <div className="blob blob-3" />
             </div>
 
-            {/* Top Navbar (Home-like) */}
+            {/* Top Navbar */}
             <header className="sticky top-0 z-50 bg-white/80 backdrop-blur border-b border-gray-200">
                 <div className="mx-auto max-w-7xl px-8 py-4 flex justify-between items-center">
                     <div className="flex items-center gap-3 animate-in">
@@ -124,7 +131,6 @@ export default function MainPage() {
                                     })}
                                 </div>
 
-                                {/* Divider */}
                                 <div className="my-4 h-px bg-gray-100" />
 
                                 {/* Actions */}
@@ -134,9 +140,12 @@ export default function MainPage() {
                                         Nová složka
                                     </button>
 
-                                    <button className="w-full flex items-center justify-center gap-2 rounded-2xl px-3 py-3 bg-white/80 hover:bg-white border border-gray-200 text-gray-800 font-semibold text-sm transition active:scale-[0.98]">
+                                    <button
+                                        onClick={() => setIsUploadOpen(true)}
+                                        className="w-full flex items-center justify-center gap-2 rounded-2xl px-3 py-3 bg-white/80 hover:bg-white border border-gray-200 text-gray-800 font-semibold text-sm transition active:scale-[0.98]"
+                                    >
                                         <FaFileAlt size={16} />
-                                        Nový soubor
+                                        Nový obrázek
                                     </button>
                                 </div>
 
@@ -166,10 +175,13 @@ export default function MainPage() {
                       Složka
                     </span>
                                     </button>
-                                    <button className="bg-white/80 hover:bg-white border border-gray-200 px-4 py-2 rounded-2xl text-sm font-semibold text-gray-800 transition active:scale-[0.98]">
+                                    <button
+                                        onClick={() => setIsUploadOpen(true)}
+                                        className="bg-white/80 hover:bg-white border border-gray-200 px-4 py-2 rounded-2xl text-sm font-semibold text-gray-800 transition active:scale-[0.98]"
+                                    >
                     <span className="inline-flex items-center gap-2">
                       <FaFileAlt />
-                      Soubor
+                      Obrázek
                     </span>
                                     </button>
                                 </div>
@@ -191,7 +203,6 @@ export default function MainPage() {
                             </div>
                         </div>
 
-                        {/* extra spacing for mobile bottom nav */}
                         <div className="md:hidden h-20" />
                     </main>
                 </div>
@@ -212,13 +223,52 @@ export default function MainPage() {
                     >
                         <FaCog size={22} />
                     </button>
-                    <button className="p-2 rounded-xl bg-sky-500 text-white hover:bg-sky-600 transition">
+                    <button
+                        onClick={() => setIsUploadOpen(true)}
+                        className="p-2 rounded-xl bg-sky-500 text-white hover:bg-sky-600 transition"
+                    >
                         <FaPlus size={22} />
                     </button>
                 </div>
             </nav>
 
-            {/* Animations + blobs (same as Home, with overflow-safe sizing) */}
+            {/* ✅ Upload modal */}
+            {isUploadOpen && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                    onMouseDown={() => setIsUploadOpen(false)}
+                >
+                    <div
+                        className="w-full max-w-lg rounded-3xl border border-gray-200 bg-white/90 shadow-xl p-5"
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className="text-lg font-extrabold">Nahrát obrázek</h3>
+                                <p className="text-sm text-gray-500">Přetáhni obrázek do boxu.</p>
+                            </div>
+                            <button
+                                onClick={() => setIsUploadOpen(false)}
+                                className="h-10 w-10 rounded-2xl border border-gray-200 bg-white/80 hover:bg-white flex items-center justify-center"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        <ImageDropUpload
+                            userId={userId}
+                            path="/"
+                            onClose={() => setIsUploadOpen(false)}
+                            onUploaded={() => {
+                                // tady si pak můžeš refreshnout list souborů
+                                // router.refresh() pokud používáš server components pro list
+                            }}
+                        />
+                    </div>
+                </div>
+            )}
+
+            {/* Animations + blobs */}
             <style jsx global>{`
                 .animate-in {
                     animation: fadeUp 700ms ease-out both;

@@ -3,13 +3,7 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {
-    FaArrowLeft,
-    FaGoogle,
-    FaShieldAlt,
-    FaUserCircle,
-    FaSignOutAlt,
-} from "react-icons/fa";
+import {FaArrowLeft, FaGoogle, FaShieldAlt, FaUserCircle, FaSignOutAlt,} from "react-icons/fa";
 
 const cx = (...classes: Array<string | false | undefined>) =>
     classes.filter(Boolean).join(" ");

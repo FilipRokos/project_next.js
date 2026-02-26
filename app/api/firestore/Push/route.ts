@@ -4,15 +4,16 @@ import {google} from "googleapis";
 import { getServerSession } from "next-auth";
 import {authOptions} from "@/app/api/auth/[...nextauth]/route";
 import {NextResponse} from "next/server";
-import { Readable } from "stream";
-export async function Post(req: Request) {
+import { Readable } from "node:stream";
+
+export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
 
     const form = await req.formData();
     const file = form.get("file");
     const path = form.get("path");
-    const filename = form.get("filename");
+    const filename = form.get("filename") as string;
     const userId = form.get("userId") as string;
 
     const userDoc = await firestore
@@ -31,12 +32,12 @@ export async function Post(req: Request) {
     const bytes = Buffer.from(await file?.arrayBuffer());
     const driveRes = await drive.files.create({
         requestBody: {
-            name: file.name,
+            name: filename || file.name,
             parents: rootfolderId ? [rootfolderId] : undefined,
         },
         media: {
             mimeType: file.type,
-            body:   bytes,
+            body:   Readable.from(bytes),
         },
         fields: "id, webViewLink",
         supportsAllDrives: true,
@@ -45,8 +46,25 @@ export async function Post(req: Request) {
     const driveFileId = driveRes.data.id;
     const driveWebViewLink = driveRes.data.webViewLink;
     if (!driveFileId) {
-        return NextResponse.json({ error: "Drive upload failed (no id)" }, { status: 500 });
+        return NextResponse.json({ error: "conection interupted" }, { status: 500 });
     }
-
-
+    await firestore.collection("users").doc(userId).collection("files").doc(driveFileId).set({
+        id: driveFileId,
+        webViewLink: driveWebViewLink,
+        FilePath: path,
+        fileName: file.name,
+    })
+    //zjistit co firestore posila za odpoved
+    if("messege" === file.type)
+    {
+        return NextResponse.json({ error: "conection interupted" }, { status: 500 });
+    }
+    return NextResponse.json(
+        {
+            success: true,
+            id: driveFileId,
+            webViewLink: driveWebViewLink,
+        },
+        { status: 200 }
+    );
 }

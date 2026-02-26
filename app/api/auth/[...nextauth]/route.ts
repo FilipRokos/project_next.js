@@ -60,7 +60,7 @@ export const authOptions: NextAuthOptions = {
                         // keep user as-is; they can re-login or you can handle later via refresh token
                         console.warn("No access_token; cannot create Drive folder on sign-in");
                     } else {
-                        const folderName = process.env.DRIVE_ROOT_FOLDER_NAME ?? "MyApp";
+                        const folderName = process.env.DRIVE_ROOT_FOLDER_NAME ?? "test";
                         const folder = await createDriveFolder({
                             accessToken: account.access_token,
                             name: folderName,
