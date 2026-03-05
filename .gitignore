@@ -16,7 +16,7 @@
 # next.js
 /.next/
 /out/
-
+app/api/tokens/check
 # production
 /build
 
