@@ -2,10 +2,26 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { firestore } from "@/lib/firebase-admin";
-import { encrypt } from "@/lib/enc";
+import {decrypt, encrypt} from "@/lib/enc";
 import { createDriveFolder } from "@/lib/drive";
 import admin from "firebase-admin";
-
+async function getToken(userId: string) {
+    const userSecrets = await firestore.collection("secrets").doc(userId).get();
+    const key = userSecrets.data()
+    const refreshToken = decrypt(key?.refreshToken?.encrypted,key?.refreshToken?.iv,key?.refreshToken?.tag)
+    const res = await fetch("https://oauth2.googleapis.com/token", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+            client_id: process.env.GOOGLE_CLIENT_ID!,
+            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
+            grant_type: "refresh_token",
+            refresh_token: refreshToken,
+        }),
+    });
+    const json = await res.json();
+    return json.access_token;
+}
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
@@ -25,7 +41,7 @@ export const authOptions: NextAuthOptions = {
     session: { strategy: "jwt" },
 
     callbacks: {
-        async jwt({ token, account, profile }) {
+        async jwt({ token, account, profile,trigger, session }) {
             // account/profile are typically present only on initial sign-in
             if (account && profile?.sub) {
                 const userId = profile.sub;
@@ -87,8 +103,19 @@ export const authOptions: NextAuthOptions = {
                     },
                     { merge: true }
                 );
+                return token;
             }
 
+
+            if(trigger === "update" && session)
+            {
+                const userId = token.sub; // ✅ tady je správné userId
+
+                const newAccesstoken = await getToken(userId as string);
+                token.accessToken = newAccesstoken;
+                return token;
+
+            }
             return token;
         },
 

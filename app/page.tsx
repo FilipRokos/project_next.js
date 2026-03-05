@@ -60,14 +60,13 @@ export default function Home() {
     const { data: session, status } = useSession();
     const router = useRouter();
 
-    // ✅ když je přihlášený, úvod se nezobrazí a hned přesměruje
+
     useEffect(() => {
         if (status !== "loading" && session) {
             router.replace("/mainpage");
         }
     }, [status, session, router]);
 
-    // ✅ hard overflow fix globálně (často dělají bloby/absoluty)
     useEffect(() => {
         document.documentElement.style.overflowX = "hidden";
         document.body.style.overflowX = "hidden";

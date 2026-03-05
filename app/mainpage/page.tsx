@@ -44,9 +44,6 @@ export default function MainPage() {
         .map((p: string) => p[0]?.toUpperCase())
         .join("");
 
-    // ⚠️ DŮLEŽITÉ: userId si u sebe držíš ve formData jako "userId".
-    // Tady beru session.user.id – pokud to máš jinak (např. session.user.uid),
-    // tak to jen přepiš na správný field.
     const userId = (session as any)?.user?.id as string;
 
     return (
@@ -260,8 +257,7 @@ export default function MainPage() {
                             path="/"
                             onClose={() => setIsUploadOpen(false)}
                             onUploaded={() => {
-                                // tady si pak můžeš refreshnout list souborů
-                                // router.refresh() pokud používáš server components pro list
+
                             }}
                         />
                     </div>

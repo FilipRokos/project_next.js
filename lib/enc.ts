@@ -1,5 +1,6 @@
+import "server-only";
 import crypto from "crypto";
-import "server-only"
+
 
 const algorithm = "aes-256-gcm";
 const ENCRYPTION_KEY = process.env.ENCRYPTION_KEY!; // 32 bytes
