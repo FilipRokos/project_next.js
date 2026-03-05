@@ -1,14 +1,12 @@
 "use client";
 
-import React, {ComponentType, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import Webcam from "react-webcam";
 import { useSession } from "next-auth/react";
-import dynamic from "next/dynamic";
-import {WebcamProps} from "react-webcam";
 
-const Webcam = dynamic(
-    () => import("react-webcam").then((m) => m.default as unknown as ComponentType<WebcamProps>),
-    { ssr: false }
-);
+class WebcamClass {
+}
+
 type Props = {
     userId: string;
     path?: string;
@@ -53,7 +51,7 @@ export default function ImageDropUpload({
     const { update } = useSession();
 
     // webcam ref + modes
-    const webcamRef = useRef<any>(null);
+    const webcamRef = useRef<Webcam | null>(null);
     const [mode, setMode] = useState<"idle" | "camera" | "captured">("idle");
     const [captured, setCaptured] = useState<string | null>(null);
 
@@ -117,7 +115,7 @@ export default function ImageDropUpload({
     };
 
     const takePhoto = () => {
-        const photo: string | null = webcamRef.current?.getScreenshot?.();
+        const photo = webcamRef.current?.getScreenshot();
         if (!photo) {
             alert("Nepodařilo se vyfotit. Zkus to znovu (nebo zkontroluj oprávnění kamery).");
             return;
