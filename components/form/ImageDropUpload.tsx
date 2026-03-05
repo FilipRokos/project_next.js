@@ -1,20 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {safe} from "@/app/api/tokens/check/route";
-import {useSession} from "next-auth/react";
+import React, {ComponentType, useCallback, useEffect, useMemo, useRef, useState} from "react";
+import { useSession } from "next-auth/react";
 import dynamic from "next/dynamic";
+import {WebcamProps} from "react-webcam";
 
+const Webcam = dynamic(
+    () => import("react-webcam").then((m) => m.default as unknown as ComponentType<WebcamProps>),
+    { ssr: false }
+);
 type Props = {
     userId: string;
     path?: string;
     onUploaded?: (data: any) => void;
     onClose?: () => void;
 };
-
-const Camera = dynamic(() => import("react-camera-pro").then((m) => m.Camera), {
-    ssr: false,
-});
 
 const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
 
@@ -48,13 +48,17 @@ export default function ImageDropUpload({
     const [filename, setFilename] = useState("");
     const [dragOver, setDragOver] = useState(false);
     const [loading, setLoading] = useState(false);
-    const { data: session} = useSession();
+
+    const { data: session } = useSession();
     const { update } = useSession();
 
-    // Kamera stav jen pro kolonku
-    const cameraRef = useRef<any>(null);
+    // webcam ref + modes
+    const webcamRef = useRef<any>(null);
     const [mode, setMode] = useState<"idle" | "camera" | "captured">("idle");
     const [captured, setCaptured] = useState<string | null>(null);
+
+    // optional: let user flip camera (front/back)
+    const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
 
     const previewUrl = useMemo(() => {
         if (!file) return null;
@@ -82,7 +86,6 @@ export default function ImageDropUpload({
                 setFilename(base);
             }
 
-            // jakmile máme file, vrátíme kolonku do normálu
             setMode("idle");
             setCaptured(null);
         },
@@ -114,8 +117,11 @@ export default function ImageDropUpload({
     };
 
     const takePhoto = () => {
-        if (!cameraRef.current) return;
-        const photo: string = cameraRef.current.takePhoto();
+        const photo: string | null = webcamRef.current?.getScreenshot?.();
+        if (!photo) {
+            alert("Nepodařilo se vyfotit. Zkus to znovu (nebo zkontroluj oprávnění kamery).");
+            return;
+        }
         setCaptured(photo);
         setMode("captured");
     };
@@ -138,14 +144,9 @@ export default function ImageDropUpload({
         const originalExt = file.name.includes(".") ? file.name.split(".").pop() : "";
         const inputName = filename.trim();
         const hasExt =
-            originalExt &&
-            inputName.toLowerCase().endsWith("." + originalExt.toLowerCase());
+            originalExt && inputName.toLowerCase().endsWith("." + originalExt.toLowerCase());
 
-        const finalName = originalExt
-            ? hasExt
-                ? inputName
-                : `${inputName}.${originalExt}`
-            : inputName;
+        const finalName = originalExt ? (hasExt ? inputName : `${inputName}.${originalExt}`) : inputName;
 
         const formData = new FormData();
         formData.append("file", file);
@@ -153,15 +154,18 @@ export default function ImageDropUpload({
         formData.append("path", String(path));
         formData.append("userId", String(userId));
 
-
         try {
             setLoading(true);
-            const checkRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?access_token=${session?.accessToken}`);
+
+            const checkRes = await fetch(
+                `https://oauth2.googleapis.com/tokeninfo?access_token=${session?.accessToken}`
+            );
             const tokeninfo = await checkRes.json();
-            console.log(tokeninfo);
-            if (tokeninfo.expires_in as number < 30 || tokeninfo.error === "invalid_token") {
+
+            if ((tokeninfo.expires_in as number) < 30 || tokeninfo.error === "invalid_token") {
                 await update({});
             }
+
             const res = await fetch("/api/firestore/Push", {
                 method: "POST",
                 body: formData,
@@ -195,7 +199,6 @@ export default function ImageDropUpload({
 
     return (
         <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            {/* KOLONKA: dropzone + kamera uvnitř */}
             <div
                 onDragEnter={(e) => {
                     e.preventDefault();
@@ -215,31 +218,23 @@ export default function ImageDropUpload({
                     dragOver ? "border-sky-500 bg-sky-50" : "border-gray-300 bg-white/60",
                 ].join(" ")}
             >
-                <input
-                    id="image"
-                    type="file"
-                    accept="image/*"
-                    onChange={onPick}
-                    className="hidden"
-                />
+                <input id="image" type="file" accept="image/*" onChange={onPick} className="hidden" />
 
-                {/* 1) Režim: kamera */}
+                {/* 1) Camera mode */}
                 {mode === "camera" && (
                     <div className="flex flex-col gap-3 items-center">
                         <div className="relative w-full h-64 overflow-hidden rounded-2xl border bg-white">
-                            <Camera
-                                ref={cameraRef}
-                                aspectRatio="cover"
-                                errorMessages={{
-                                    noCameraAccessible: "Kamera není dostupná",
-                                    permissionDenied: "Přístup ke kameře byl zamítnut",
-                                    switchCamera: "Nelze přepnout kameru",
-                                    canvas: "Canvas není podporován",
-                                }}
+                            <Webcam
+                                ref={webcamRef}
+                                audio={false}
+                                screenshotFormat="image/jpeg"
+                                screenshotQuality={0.95}
+                                videoConstraints={{ facingMode }}
+                                className="w-full h-full object-cover"
                             />
                         </div>
 
-                        <div className="flex gap-2 justify-center">
+                        <div className="flex gap-2 justify-center flex-wrap">
                             <button
                                 type="button"
                                 onClick={() => setMode("idle")}
@@ -247,6 +242,15 @@ export default function ImageDropUpload({
                             >
                                 Zrušit
                             </button>
+
+                            <button
+                                type="button"
+                                onClick={() => setFacingMode((m) => (m === "user" ? "environment" : "user"))}
+                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
+                            >
+                                Přepnout kameru
+                            </button>
+
                             <button
                                 type="button"
                                 onClick={takePhoto}
@@ -255,10 +259,14 @@ export default function ImageDropUpload({
                                 Vyfotit
                             </button>
                         </div>
+
+                        <p className="text-xs text-gray-500">
+                            Pokud kamera nenaběhne, zkontroluj oprávnění v prohlížeči.
+                        </p>
                     </div>
                 )}
 
-                {/* 2) Režim: vyfoceno */}
+                {/* 2) Captured mode */}
                 {mode === "captured" && captured && (
                     <div className="flex flex-col gap-3 items-center">
                         {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -290,15 +298,12 @@ export default function ImageDropUpload({
                     </div>
                 )}
 
-                {/* 3) Normální režim: buď prázdno nebo preview souboru */}
+                {/* 3) Idle mode */}
                 {mode === "idle" && !file && (
                     <div className="flex flex-col gap-2 items-center">
                         <p className="text-sm text-gray-600">
                             Přetáhni sem obrázek nebo{" "}
-                            <label
-                                htmlFor="image"
-                                className="text-sky-700 underline cursor-pointer font-semibold"
-                            >
+                            <label htmlFor="image" className="text-sky-700 underline cursor-pointer font-semibold">
                                 vyber soubor
                             </label>
                         </p>
