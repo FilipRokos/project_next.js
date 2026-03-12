@@ -27,13 +27,13 @@ export default function MainPage() {
         []
     );
 
-    if (status === "loading") {
+    /*if (status === "loading") {
         return (
             <div className="min-h-screen flex items-center justify-center bg-gray-50">
                 <p className="text-gray-400 animate-pulse text-lg">Načítám session…</p>
             </div>
         );
-    }
+    }*/
     if (!session) return null;
 
     const userName = session.user?.name ?? "Uživatel";

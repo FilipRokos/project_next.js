@@ -109,7 +109,7 @@ export const authOptions: NextAuthOptions = {
 
             if(trigger === "update" && session)
             {
-                const userId = token.sub; // ✅ tady je správné userId
+                const userId = token.sub;
 
                 const newAccesstoken = await getToken(userId as string);
                 token.accessToken = newAccesstoken;

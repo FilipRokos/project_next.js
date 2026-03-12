@@ -4,8 +4,7 @@ import React, { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Webcam from "react-webcam";
 import { useSession } from "next-auth/react";
 
-class WebcamClass {
-}
+
 
 type Props = {
     userId: string;
@@ -159,7 +158,7 @@ export default function ImageDropUpload({
                 `https://oauth2.googleapis.com/tokeninfo?access_token=${session?.accessToken}`
             );
             const tokeninfo = await checkRes.json();
-
+            console.log(tokeninfo);
             if ((tokeninfo.expires_in as number) < 30 || tokeninfo.error === "invalid_token") {
                 await update({});
             }
