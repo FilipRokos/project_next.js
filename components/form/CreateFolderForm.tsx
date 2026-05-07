@@ -27,7 +27,7 @@ export default function CreateFolderForm({
             label: f.path || f.name
         }))
     ];
-    const handleSubmit = async (e) => {
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if(!folderName.trim()) return alert("Please enter a folder name.");
         const formData = new FormData();
