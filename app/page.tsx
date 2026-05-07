@@ -87,7 +87,6 @@ export default function Home() {
         );
     }
 
-    // ✅ aby to ani na moment nerenderovalo UI
     if (session) return null;
 
     return (

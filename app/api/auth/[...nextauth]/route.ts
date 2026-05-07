@@ -51,7 +51,7 @@ export const authOptions: NextAuthOptions = {
                 grantedScopes.includes(requiredScope)
 
             if (!hasDrivePermission) {
-                return false
+                return "/";
             }
 
             return true
