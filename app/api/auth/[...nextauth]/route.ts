@@ -41,6 +41,21 @@ export const authOptions: NextAuthOptions = {
     session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 * 3},
 
     callbacks: {
+        async signIn({ account }) {
+            const grantedScopes = account?.scope?.split(" ") ?? []
+
+            const requiredScope =
+                "https://www.googleapis.com/auth/drive.file"
+
+            const hasDrivePermission =
+                grantedScopes.includes(requiredScope)
+
+            if (!hasDrivePermission) {
+                return false
+            }
+
+            return true
+        },
         async jwt({ token, account, profile,trigger, session }) {
             // account/profile are typically present only on initial sign-in
             if (account && profile?.sub) {
