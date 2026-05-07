@@ -15,6 +15,8 @@ export async function POST(req: Request) {
     const path = form.get("path");
     const filename = form.get("filename") as string;
     const userId = form.get("userId") as string;
+    const parentId = form.get("parentId") as string;
+
 
     const userDoc = await firestore
         .collection("users")
@@ -45,14 +47,19 @@ export async function POST(req: Request) {
 
     const driveFileId = driveRes.data.id;
     const driveWebViewLink = driveRes.data.webViewLink;
+    const driveWebContentLink = driveRes.data.webContentLink;
+
     if (!driveFileId) {
         return NextResponse.json({ error: "conection interupted" }, { status: 500 });
     }
     await firestore.collection("users").doc(userId).collection("files").doc(driveFileId).set({
         id: driveFileId,
         webViewLink: driveWebViewLink,
+        webContentLink: driveWebContentLink,
         FilePath: path,
         fileName: file.name,
+        parentId: parentId,
+        type: "file",
     })
     //zjistit co firestore posila za odpoved
     if("messege" === file.type)
@@ -67,4 +74,16 @@ export async function POST(req: Request) {
         },
         { status: 200 }
     );
+}
+export async function GET(req: Request) {
+    const session = await getServerSession(authOptions);
+
+    const userId = session?.user.id;
+    const snapshot = await firestore.collection("users").doc(userId).collection("files").where("type", "==", "files").get();
+    const files = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    }));
+    console.log(files);
+    return Response.json({ folders: files });
 }

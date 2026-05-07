@@ -38,3 +38,4 @@ ToDo
   - after succ login page 
   - setting page 
   - form page 
+-Našeptávak na uloženi obrazku

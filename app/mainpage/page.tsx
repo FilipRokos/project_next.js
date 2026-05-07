@@ -2,9 +2,13 @@
 
 import { useSession, signOut } from "next-auth/react";
 import { FaUser, FaCog, FaPlus, FaFileAlt, FaTimes } from "react-icons/fa";
-import { useEffect, useMemo, useState } from "react";
+import {useCallback, useEffect, useMemo, useState} from "react";
 import { useRouter, usePathname } from "next/navigation";
 import ImageDropUpload from "../../components/form/ImageDropUpload";
+import CreateFolder from "@/components/form/CreateFolderForm";
+import type {Folder} from "@/types/folders"
+import ViewBox from "@/components/ViewBox";
+import {File} from "@/types/file";
 
 const cx = (...classes: Array<string | false | undefined>) =>
     classes.filter(Boolean).join(" ");
@@ -14,11 +18,63 @@ export default function MainPage() {
     const pathname = usePathname();
     const { data: session, status } = useSession();
     const [isUploadOpen, setIsUploadOpen] = useState(false);
+    const [isCreateFolderOpen, setIsCreateFolderOpen] = useState(false);
+    const [folders,setFolders] = useState<Folder[]>([]);
+    const [files,setFiles] = useState<File[]>([]);
+    const [currentParentId, setCurrentParentId] = useState("");
+    const [path, setPath] = useState<{ id: string; name: string }[]>([
+        { id: "", name: "user" },
+    ]);
 
+    const [refreshKey, setRefreshKey] = useState(0);
     useEffect(() => {
         if (status !== "loading" && !session) router.push("/");
     }, [status, session, router]);
 
+    const handleFolderClick = (id: string, name: string) => {
+        setCurrentParentId(id);
+
+        setPath((prev) => {
+            const index = prev.findIndex(p => p.id === id);
+
+            if (index !== -1) {
+                return prev.slice(0, index + 1);
+            }
+
+            return [...prev, { id, name }];
+        });
+    };
+    useEffect(() => {
+        const fetchData = async () => {
+            const res = await fetch("/api/firestore/Folders/");
+            const folders = await res.json();
+            setFolders(folders.folders);
+            const res2 = await fetch("/api/firestore/Files/");
+            const files = await res2.json();
+            setFiles(files.folders);
+
+        };
+
+        fetchData();
+    }, [refreshKey]);
+    const items = [
+        ...folders
+            .filter((f) => f.parentId === currentParentId)
+            .map((folder) => ({
+                id: folder.id,
+                title: folder.name,
+                type: "folder" as const,
+            })),
+
+        ...files
+            .filter((f) => f.parentId === currentParentId)
+            .map((file) => ({
+                id: file.id,
+                title: file.name,
+                type: "file" as const,
+                url: file.webViewLink,
+            })),
+    ];
     const navItems = useMemo(
         () => [
             { label: "Profil", icon: <FaUser size={18} />, href: "/mainpage/userinfo" },
@@ -46,6 +102,7 @@ export default function MainPage() {
 
     const userId = (session as any)?.user?.id as string;
 
+    // @ts-ignore
     return (
         <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 text-gray-900">
             {/* Decorative blobs */}
@@ -65,6 +122,7 @@ export default function MainPage() {
                         <div>
                             <h1 className="text-lg md:text-xl font-extrabold leading-tight">
                                 Fill Out Later
+
                             </h1>
                             <p className="hidden md:block text-xs text-gray-500">
                                 Správa složek & souborů
@@ -132,7 +190,9 @@ export default function MainPage() {
 
                                 {/* Actions */}
                                 <div className="grid grid-cols-1 gap-2">
-                                    <button className="w-full flex items-center justify-center gap-2 rounded-2xl px-3 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition shadow-sm active:scale-[0.98]">
+                                    <button
+                                        onClick={() => setIsCreateFolderOpen(true)}
+                                        className="w-full flex items-center justify-center gap-2 rounded-2xl px-3 py-3 bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition shadow-sm active:scale-[0.98]">
                                         <FaPlus size={16} />
                                         Nová složka
                                     </button>
@@ -152,56 +212,21 @@ export default function MainPage() {
                             </div>
                         </div>
                     </aside>
+                    <ViewBox
+                        path={path}
+                        items={items}
+                        onFolderClick={handleFolderClick}
+                    />
 
-                    {/* Main */}
-                    <main className="flex-1 py-8 animate-in-delay">
-                        <div className="rounded-3xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm">
-                            <div className="p-6 border-b border-gray-100 flex items-start justify-between gap-4">
-                                <div>
-                                    <h2 className="text-lg md:text-xl font-extrabold">Moje složky</h2>
-                                    <p className="text-sm text-gray-500">
-                                        Zde se budou zobrazovat složky a obrázky uživatele.
-                                    </p>
-                                </div>
 
-                                {/* quick actions for smaller screens */}
-                                <div className="md:hidden flex gap-2">
-                                    <button className="bg-sky-500 hover:bg-sky-600 px-4 py-2 rounded-2xl text-sm font-semibold text-white transition shadow-sm active:scale-[0.98]">
-                    <span className="inline-flex items-center gap-2">
-                      <FaPlus />
-                      Složka
-                    </span>
-                                    </button>
-                                    <button
-                                        onClick={() => setIsUploadOpen(true)}
-                                        className="bg-white/80 hover:bg-white border border-gray-200 px-4 py-2 rounded-2xl text-sm font-semibold text-gray-800 transition active:scale-[0.98]"
-                                    >
-                    <span className="inline-flex items-center gap-2">
-                      <FaFileAlt />
-                      Obrázek
-                    </span>
-                                    </button>
-                                </div>
-                            </div>
 
-                            <div className="p-6">
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-                                    {[...Array(8)].map((_, i) => (
-                                        <div
-                                            key={i}
-                                            className="rounded-3xl border border-gray-200 bg-white/60 p-4 hover:bg-white hover:shadow-sm transition"
-                                        >
-                                            <div className="h-10 w-10 rounded-2xl bg-sky-100 mb-3" />
-                                            <div className="h-4 w-2/3 bg-gray-200/60 rounded mb-2" />
-                                            <div className="h-3 w-1/2 bg-gray-200/60 rounded" />
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-                        </div>
 
-                        <div className="md:hidden h-20" />
-                    </main>
+
+
+
+
+
+
                 </div>
             </div>
 
@@ -241,7 +266,7 @@ export default function MainPage() {
                     >
                         <div className="flex items-center justify-between mb-4">
                             <div>
-                                <h3 className="text-lg font-extrabold">Nahrát obrázek</h3>
+                                <h3 className=  "text-lg font-extrabold">Nahrát obrázek</h3>
                                 <p className="text-sm text-gray-500">Přetáhni obrázek do boxu.</p>
                             </div>
                             <button
@@ -259,6 +284,37 @@ export default function MainPage() {
                             onUploaded={() => {
 
                             }}
+                        />
+                    </div>
+                </div>
+            )}
+            {isCreateFolderOpen && (
+                <div
+                    className="fixed inset-0 z-[60] bg-black/40 backdrop-blur-sm flex items-center justify-center p-4"
+                    onMouseDown={() => setIsCreateFolderOpen(false)}
+                >
+                    <div
+                        className="w-full max-w-lg rounded-3xl border border-gray-200 bg-white/90 shadow-xl p-5"
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <div className="flex items-center justify-between mb-4">
+                            <div>
+                                <h3 className=  "text-lg font-extrabold">Nahrát obrázek</h3>
+                                <p className="text-sm text-gray-500">Přetáhni obrázek do boxu.</p>
+                            </div>
+                            <button
+                                onClick={() => setIsCreateFolderOpen(false)}
+                                className="h-10 w-10 rounded-2xl border border-gray-200 bg-white/80 hover:bg-white flex items-center justify-center"
+                            >
+                                <FaTimes />
+                            </button>
+                        </div>
+
+                        <CreateFolder
+                            onClose={() => setIsUploadOpen(false)}
+                            folders={folders}
+                            onSubmit={()=> setRefreshKey(prev => prev + 1)}
+
                         />
                     </div>
                 </div>
