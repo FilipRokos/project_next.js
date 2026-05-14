@@ -25,7 +25,7 @@ export default function MainPage() {
     const [path, setPath] = useState<{ id: string; name: string }[]>([
         { id: "", name: "user" },
     ]);
-
+    const lastId = path.length > 0 ? path[path.length - 1].id : "";
     const [refreshKey, setRefreshKey] = useState(0);
     useEffect(() => {
         if (status !== "loading" && !session) router.push("/");
@@ -53,6 +53,7 @@ export default function MainPage() {
             const files = await res2.json();
             setFiles(files.folders);
 
+
         };
 
         fetchData();
@@ -70,10 +71,12 @@ export default function MainPage() {
             .filter((f) => f.parentId === currentParentId)
             .map((file) => ({
                 id: file.id,
-                title: file.name,
+                title: file.fileName,
                 type: "file" as const,
                 url: file.webViewLink,
+
             })),
+
     ];
     const navItems = useMemo(
         () => [
@@ -227,6 +230,7 @@ export default function MainPage() {
 
 
 
+
                 </div>
             </div>
 
@@ -281,9 +285,9 @@ export default function MainPage() {
                             userId={userId}
                             path="/"
                             onClose={() => setIsUploadOpen(false)}
-                            onUploaded={() => {
+                            onUploaded={()=> setRefreshKey(prev => prev + 1)}
+                            parentId={lastId}
 
-                            }}
                         />
                     </div>
                 </div>

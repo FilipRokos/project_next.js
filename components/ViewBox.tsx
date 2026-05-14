@@ -23,7 +23,7 @@ export default function ViewBox({
                                 }: ViewBoxProps) {
     const [isUploadOpen, setIsUploadOpen] = useState(false);
 
-    console.log(path)
+    console.log(items)
     return (
         <main className="flex-1 py-8 animate-in-delay">
             <div className="rounded-3xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm">
@@ -106,23 +106,36 @@ export default function ViewBox({
 
                             // 📄 FILE
                             return (
-                                <a
+                                <div
                                     key={item.id}
-                                    href={item.url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="rounded-3xl border border-gray-200 bg-white/60 p-4 hover:bg-white hover:shadow-sm transition block"
+                                    className="rounded-3xl border border-gray-200 bg-white/60 p-3 hover:shadow-sm transition cursor-pointer"
                                 >
-                                    {base}
+                                    <div className="w-full h-40 rounded-2xl overflow-hidden bg-gray-100 mb-3">
+                                        <img
+                                            src={`https://drive.google.com/uc?export=view&id=${item.id}`}
+                                            alt={item.title}
+                                            className="w-full h-full object-cover"
+                                            loading="lazy"
+                                            referrerPolicy="no-referrer"
+                                            onError={(e) => {
+                                                const target = e.currentTarget;
+
+                                                if (!target.dataset.step) {
+                                                    target.dataset.step = "1";
+                                                    target.src = `https://drive.google.com/thumbnail?id=${item.id}&sz=s800`;
+                                                } else {
+                                                    target.src =
+                                                        "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='160'%3E%3Crect width='100%25' height='100%25' fill='%23f3f4f6'/%3E%3Ctext x='50%25' y='50%25' dominant-baseline='middle' text-anchor='middle' fill='%239ca3af' font-size='16'%3EImage not available%3C/text%3E%3C/svg%3E";
+                                                }
+                                            }}
+                                        />
+                                    </div>
 
                                     <div className="text-sm font-semibold text-gray-800 truncate">
                                         {item.title}
                                     </div>
 
-                                    <div className="text-xs text-sky-600 truncate mt-1">
-                                        Soubor
-                                    </div>
-                                </a>
+                                </div>
                             );
                         })}
                     </div>

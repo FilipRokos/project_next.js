@@ -27,12 +27,20 @@ export const authOptions: NextAuthOptions = {
         GoogleProvider({
             clientId: process.env.GOOGLE_CLIENT_ID!,
             clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
+
             authorization: {
+                url: "https://accounts.google.com/o/oauth2/v2/auth",
                 params: {
-                    scope:
-                        "openid email profile https://www.googleapis.com/auth/drive.file",
-                    access_type: "offline",
+                    scope: [
+                        "openid",
+                        "email",
+                        "profile",
+                        "https://www.googleapis.com/auth/drive.file",
+                    ].join(" "),
                     prompt: "consent",
+                    access_type: "offline",
+                    response_type: "code",
+                    include_granted_scopes: "false",
                 },
             },
         }),
@@ -42,16 +50,14 @@ export const authOptions: NextAuthOptions = {
 
     callbacks: {
         async signIn({ account }) {
-            const grantedScopes = account?.scope?.split(" ") ?? []
+            const scopes = account?.scope?.split(" ") ?? []
 
-            const requiredScope =
+            const hasDrivePermission = scopes.includes(
                 "https://www.googleapis.com/auth/drive.file"
-
-            const hasDrivePermission =
-                grantedScopes.includes(requiredScope)
+            )
 
             if (!hasDrivePermission) {
-                return "/";
+                return "/auth/error?error=drive_permission_required"
             }
 
             return true

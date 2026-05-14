@@ -1,6 +1,6 @@
 export type File = {
     id: string
-    name: string
+    fileName: string
     path: string
     parentId: string
     type: string
