@@ -57,7 +57,7 @@ export const authOptions: NextAuthOptions = {
             )
 
             if (!hasDrivePermission) {
-                return "/auth/error?error=drive_permission_required"
+                return `${process.env.NEXTAUTH_URL}/`
             }
 
             return true
