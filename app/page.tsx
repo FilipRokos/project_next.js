@@ -1,127 +1,45 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import React, { JSX, useEffect, useMemo, useRef } from "react";
-import { useRouter } from "next/navigation";
-import { motion, useInView, type HTMLMotionProps } from "framer-motion";
-import {AnimationDefinition} from "motion";
+import React from "react";
 
-
-const MotionMap = {
-    div: motion.div,
-    section: motion.section,
-    main: motion.main,
-    header: motion.header,
-    footer: motion.footer,
-    article: motion.article,
-    nav: motion.nav,
-    ul: motion.ul,
-    li: motion.li,
-    span: motion.span,
-} as const;
-
-type MotionTag = keyof typeof MotionMap;
-
-type RevealProps = {
-    delay?: number; // ms
-    className?: string;
-    amount?: number;
-    margin?: string;
-    y?: number;
-    duration?: number;
-    children: React.ReactNode;
-};
-
-export function Reveal({
-                           delay = 0,
-                           className = "",
-                           amount = 0.12,
-                           margin = "0px 0px -10px 0px",
-                           y = 18,
-                           duration = 0.65,
-                           children,
-                       }: RevealProps) {
-    const ref = useRef<HTMLDivElement | null>(null);
-    const isInView = useInView(ref, { amount, margin: "0px 0px -10px 0px" });
-
-    return (
-        <motion.div
-            ref={ref}
-            className={["h-full", className].join(" ")}
-            initial={false}
-            animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y }}
-            transition={{ duration, ease: "easeOut", delay: delay / 1000 }}
-        >
-            {children}
-        </motion.div>
-    );
-}
 export default function Home() {
-    const { data: session, status } = useSession();
-    const router = useRouter();
-
-
-    useEffect(() => {
-        if (status !== "loading" && session) {
-            router.replace("/mainpage");
-        }
-    }, [status, session, router]);
-
-    useEffect(() => {
-        document.documentElement.style.overflowX = "hidden";
-        document.body.style.overflowX = "hidden";
-        return () => {
-            document.documentElement.style.overflowX = "";
-            document.body.style.overflowX = "";
-        };
-    }, []);
-
-    const loginWhiteBtn =
-        "inline-flex items-center gap-3 rounded-2xl border border-gray-200 bg-white px-4 py-2.5 text-sm font-semibold text-gray-900 hover:bg-gray-50 hover:shadow-sm transition";
+    const { status } = useSession();
 
     if (status === "loading") {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-500 animate-pulse">Načítám session…</p>
+            <div className="min-h-screen flex items-center justify-center bg-white">
+                <div className="h-5 w-5 rounded-full border-2 border-indigo-500 border-t-transparent animate-spin" />
             </div>
         );
     }
 
-    if (session) return null;
-
     return (
-        <div className="min-h-screen overflow-x-hidden bg-gradient-to-br from-gray-50 via-gray-50 to-gray-100 text-gray-900 relative">
-            {/* ✅ Full-page blue tint (po celé stránce) */}
-            <div className="pointer-events-none absolute inset-0 -z-0">
-                <div className="absolute inset-0 bg-gradient-to-br from-sky-50/70 via-transparent to-sky-100/60" />
-            </div>
+        <div className="min-h-screen bg-white text-gray-900 overflow-x-hidden">
 
-            {/* Decorative animated blobs (bez overflow) */}
-            <div className="pointer-events-none absolute inset-0 overflow-hidden -z-0">
-                <div className="blob blob-1" />
-                <div className="blob blob-2" />
-                <div className="blob blob-3" />
-            </div>
+            {/* Subtle grid */}
+            <div className="pointer-events-none fixed inset-0 -z-0"
+                style={{
+                    backgroundImage: `linear-gradient(rgba(99,102,241,0.04) 1px, transparent 1px), linear-gradient(90deg, rgba(99,102,241,0.04) 1px, transparent 1px)`,
+                    backgroundSize: "48px 48px",
+                }}
+            />
 
-            {/* Top bar */}
-            <header className="sticky top-0 z-50 bg-white/90 backdrop-blur-md border-b border-gray-200">
-                <div className="mx-auto max-w-7xl px-8 py-4 flex items-center justify-between">
-                    <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center font-extrabold text-sky-700">
+            {/* Top glow */}
+            <div className="pointer-events-none fixed top-0 left-1/2 -translate-x-1/2 w-[600px] h-[300px] rounded-full bg-indigo-100 blur-[80px] -z-0 opacity-70" />
+
+            {/* Nav */}
+            <header className="relative z-10 border-b border-gray-100 bg-white/80 backdrop-blur-md sticky top-0">
+                <div className="mx-auto max-w-6xl px-6 h-16 flex items-center justify-between">
+                    <div className="flex items-center gap-2.5">
+                        <div className="h-8 w-8 rounded-xl bg-indigo-600 flex items-center justify-center text-sm font-black text-white">
                             F
                         </div>
-                        <div>
-                            <p className="font-extrabold leading-tight">Fill Out Later</p>
-                            <p className="text-xs text-gray-500 hidden sm:block">
-                                Ulož a vrať se k tomu později.
-                            </p>
-                        </div>
+                        <span className="font-bold text-gray-900">DigiReceipts</span>
                     </div>
-
-                    {/* ✅ Login vpravo nahoře (bílý) */}
                     <button
                         onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
-                        className={loginWhiteBtn}
+                        className="inline-flex items-center gap-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-4 py-2 text-sm font-semibold text-white  transition shadow-lg shadow-indigo-200"
                     >
                         <GoogleIcon />
                         Přihlásit se
@@ -129,447 +47,169 @@ export default function Home() {
                 </div>
             </header>
 
-            {/* HERO */}
-            <main className="relative z-10 mx-auto max-w-7xl px-8 pt-14 pb-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-                    <Reveal className="" delay={0}>
-                        <div className="inline-flex items-center gap-2 rounded-full border border-gray-200 bg-white/70 px-3 py-1 text-xs font-semibold text-gray-700">
-                            <span className="h-2 w-2 rounded-full bg-sky-500" />
-                            Přihlášení přes Google • bez hesla
-                        </div>
-
-                        <h1 className="mt-4 text-4xl md:text-6xl font-extrabold tracking-tight">
-                            Ulož si to.
-                            <span className="block text-sky-600">Vyplň později.</span>
-                        </h1>
-
-                        <p className="mt-5 text-lg text-gray-600 max-w-xl">
-                            Složky, soubory a obrázky na jednom místě. Přehledně, rychle a bez
-                            zbytečností. Ideální pro věci, které nechceš ztratit, ale teď na
-                            ně není čas.
-                        </p>
-
-                        <div className="mt-8 flex flex-col sm:flex-row gap-3">
-                            {/* ✅ Hero CTA taky bílé */}
-                            <button
-                                onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
-                                className={[loginWhiteBtn, "px-6 py-3.5 justify-center"].join(
-                                    " "
-                                )}
-                            >
-                                <GoogleIcon />
-                                Začít s Google
-                                <span className="inline-block transition-transform group-hover:translate-x-0.5">
-                  →
-                </span>
-                            </button>
-
-                            <a
-                                href="#how"
-                                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white/70 hover:bg-white px-6 py-3.5 text-sm font-semibold text-gray-900 transition"
-                            >
-                                Jak to funguje
-                            </a>
-                        </div>
-
-                        {/* ✅ equal-height row cards */}
-                        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-3 auto-rows-fr items-stretch">
-                            <Reveal delay={50}>
-                                <FeatureCard title="Složky" desc="Uspořádej si věci přehledně." />
-                            </Reveal>
-                            <Reveal delay={120}>
-                                <FeatureCard title="Rychle" desc="Uložení na pár kliků." />
-                            </Reveal>
-                            <Reveal delay={190}>
-                                <FeatureCard title="Bez hesla" desc="Google přihlášení." />
-                            </Reveal>
-                        </div>
-                    </Reveal>
-
-                    <Reveal delay={120}>
-                        <PreviewPanel />
-                    </Reveal>
+            {/* Hero */}
+            <main className="relative z-10 mx-auto max-w-6xl px-6 pt-20 pb-16 text-center">
+                <div className="inline-flex items-center gap-2 rounded-full border border-indigo-100 bg-indigo-50 px-3 py-1 text-xs text-indigo-600 font-medium mb-8">
+                    <span className="h-1.5 w-1.5 rounded-full bg-indigo-500" />
+                    Bez hesla · Přihlášení přes Google
                 </div>
-            </main>
 
-            {/* SECTION: Features */}
-            <section className="relative z-10 mx-auto max-w-7xl px-8 pb-16">
-                <Reveal>
-                    <div className="rounded-3xl border border-gray-200 bg-white/70 backdrop-blur p-6 md:p-10 shadow-sm">
-                        <div className="flex items-end justify-between gap-6">
-                            <div>
-                                <h2 className="text-2xl md:text-3xl font-extrabold">
-                                    Co ti to ulehčí
-                                </h2>
-                                <p className="text-gray-600 mt-2 max-w-2xl">
-                                    Minimalistická aplikace na ukládání věcí “na později” — ať už
-                                    je to formulář, screenshot, dokument nebo inspirace.
-                                </p>
-                            </div>
-                            <div className="hidden md:flex gap-2">
-                                <Pill>Rychlé uložení</Pill>
-                                <Pill>Čistý design</Pill>
-                                <Pill>Desktop-first</Pill>
-                            </div>
-                        </div>
+                <h1 className="text-5xl md:text-7xl font-black tracking-tight leading-none mb-6 text-gray-900">
+                    Ulož si to.
+                    <br />
+                    <span className="bg-gradient-to-r from-indigo-600 to-violet-500 bg-clip-text text-transparent">
+                        Vyplň později.
+                    </span>
+                </h1>
 
-                        {/* ✅ equal-height cards across rows */}
-                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 auto-rows-fr items-stretch">
-                            {[
-                                ["Přehledné složky", "Vše má svoje místo a najdeš to rychle."],
-                                [
-                                    "Soubor i složka jedním klikem",
-                                    "Vytvářej nové položky rovnou ze sidebaru.",
-                                ],
-                                [
-                                    "Příjemné UI",
-                                    "Jemné animace, konzistentní karty a rozumné mezery.",
-                                ],
-                                ["Google login", "Bez registrace a bez hesel."],
-                                ["Rychlé akce", "Nový soubor / složka kdykoliv po ruce."],
-                                ["Škálovatelný layout", "Vypadá dobře na PC i menších displejích."],
-                            ].map(([t, d], i) => (
-                                <Reveal key={t} delay={i * 60}>
-                                    <BigCard title={t} desc={d} />
-                                </Reveal>
+                <p className="text-lg text-gray-500 max-w-xl mx-auto mb-10">
+                    Složky, soubory a obrázky na jednom místě. Přehledně, rychle a bez zbytečností.
+                </p>
+
+                <div className="flex items-center justify-center gap-3 flex-wrap">
+                    <button
+                        onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
+                        className="inline-flex items-center gap-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 px-6 py-3 text-sm font-semibold text-white transition shadow-lg shadow-indigo-200"
+                    >
+                        <GoogleIcon />
+                        Začít zdarma
+                    </button>
+                    <a
+                        href="#features"
+                        className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 px-6 py-3 text-sm font-semibold text-gray-700 transition"
+                    >
+                        Jak to funguje
+                    </a>
+                </div>
+
+                {/* App preview mockup */}
+                <div className="mt-16 rounded-2xl border border-gray-200 bg-white overflow-hidden shadow-xl shadow-gray-100 text-left">
+                    <div className="flex items-center gap-2 px-4 py-3 border-b border-gray-100 bg-gray-50">
+                        <div className="h-2.5 w-2.5 rounded-full bg-red-400" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-yellow-400" />
+                        <div className="h-2.5 w-2.5 rounded-full bg-green-400" />
+                        <div className="ml-4 h-5 w-48 rounded-md bg-gray-200" />
+                    </div>
+                    <div className="flex">
+                        <div className="w-44 shrink-0 border-r border-gray-100 bg-gray-50/80 p-3 space-y-1">
+                            {["Domů", "Složky", "Soubory", "Nastavení"].map((item, i) => (
+                                <div key={item} className={`flex items-center gap-2 rounded-lg px-2 py-1.5 text-xs font-medium ${i === 0 ? "bg-indigo-600 text-white" : "text-gray-400"}`}>
+                                    <div className={`h-2.5 w-2.5 rounded-sm ${i === 0 ? "bg-white/40" : "bg-gray-300"}`} />
+                                    {item}
+                                </div>
                             ))}
                         </div>
-                    </div>
-                </Reveal>
-            </section>
-
-            {/* SECTION: How it works */}
-            <section id="how" className="relative z-10 mx-auto max-w-7xl px-8 pb-16">
-                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
-                    <Reveal>
-                        <h2 className="text-2xl md:text-3xl font-extrabold">Jak to funguje</h2>
-                        <p className="text-gray-600 mt-2 max-w-xl">
-                            Jednoduše: přihlásíš se, vytvoříš složku nebo soubor a ukládáš
-                            věci, ke kterým se chceš vrátit.
-                        </p>
-
-                        <div className="mt-6 space-y-3">
-                            <Reveal delay={60}>
-                                <Step
-                                    n="1"
-                                    title="Přihlas se přes Google"
-                                    desc="Bez hesla, bezpečně."
-                                />
-                            </Reveal>
-                            <Reveal delay={120}>
-                                <Step
-                                    n="2"
-                                    title="Vytvoř složku nebo soubor"
-                                    desc="Akce jsou v sidebaru."
-                                />
-                            </Reveal>
-                            <Reveal delay={180}>
-                                <Step
-                                    n="3"
-                                    title="Ukládej a vrať se později"
-                                    desc="Všechno hezky na jednom místě."
-                                />
-                            </Reveal>
-                        </div>
-
-                        <div className="mt-7 flex flex-col sm:flex-row gap-3">
-                            <button
-                                onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
-                                className={[loginWhiteBtn, "px-6 py-3.5 justify-center"].join(
-                                    " "
-                                )}
-                            >
-                                <GoogleIcon />
-                                Přihlásit se a pokračovat
-                            </button>
-                            <a
-                                href="#faq"
-                                className="inline-flex items-center justify-center rounded-2xl border border-gray-200 bg-white/70 hover:bg-white px-6 py-3.5 text-sm font-semibold text-gray-900 transition"
-                            >
-                                FAQ
-                            </a>
-                        </div>
-                    </Reveal>
-
-                    <Reveal delay={120}>
-                        <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6">
-                            <h3 className="font-extrabold">Příklady použití</h3>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Co si lidi typicky ukládají na později:
-                            </p>
-
-                            {/* ✅ equal-height tiles */}
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3 auto-rows-fr items-stretch">
-                                {[
-                                    ["Formuláře", "vyplním později"],
-                                    ["Dokumenty", "projdu později"],
-                                    ["Screenshots", "zpracuju později"],
-                                    ["Inspirace", "vrátím se k tomu"],
-                                ].map(([t, d], i) => (
-                                    <Reveal key={t} delay={i * 60}>
-                                        <MiniUseCase title={t} desc={d} />
-                                    </Reveal>
+                        <div className="flex-1 p-5 bg-white">
+                            <div className="grid grid-cols-3 gap-3">
+                                {[...Array(6)].map((_, i) => (
+                                    <div key={i} className="rounded-xl border border-gray-100 bg-gray-50 p-3">
+                                        <div className="h-8 w-8 rounded-lg bg-indigo-100 mb-2" />
+                                        <div className="h-2.5 w-2/3 rounded-full bg-gray-200 mb-1.5" />
+                                        <div className="h-2 w-1/2 rounded-full bg-gray-100" />
+                                    </div>
                                 ))}
                             </div>
                         </div>
+                    </div>
+                </div>
+            </main>
 
-                        <div className="mt-4 rounded-3xl border border-gray-200 bg-white/70 backdrop-blur shadow-sm p-6">
-                            <p className="text-sm font-semibold">Pro tip</p>
-                            <p className="text-sm text-gray-600 mt-1">
-                                Udržuj si 3–7 složek a pojmenovávej je podle kontextu:
-                                <span className="font-semibold text-gray-800">
-                  {" "}
-                                    Práce, Osobní, Škola, Později
-                </span>
-                                .
-                            </p>
+            {/* Features */}
+            <section id="features" className="relative z-10 mx-auto max-w-6xl px-6 pb-20">
+                <div className="text-center mb-12">
+                    <p className="text-xs text-indigo-600 font-semibold uppercase tracking-widest mb-3">Funkce</p>
+                    <h2 className="text-3xl md:text-4xl font-black text-gray-900">Co ti to ulehčí</h2>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                        { title: "Přehledné složky", desc: "Vše má svoje místo. Vytvoř si strukturu jak potřebuješ.", icon: "▤" },
+                        { title: "Rychlé uložení", desc: "Pár kliků a soubor je uložený. Bez zbytečných kroků.", icon: "⚡" },
+                        { title: "Google přihlášení", desc: "Bez registrace, bez hesla. Přihlásíš se přes Google.", icon: "🔑" },
+                    ].map((f) => (
+                        <div key={f.title} className="rounded-2xl border border-gray-100 bg-gray-50 hover:border-indigo-200 hover:bg-indigo-50/30 p-6 transition group">
+                            <div className="text-2xl mb-4">{f.icon}</div>
+                            <h3 className="font-bold text-gray-900 mb-2">{f.title}</h3>
+                            <p className="text-sm text-gray-500 leading-relaxed">{f.desc}</p>
                         </div>
-                    </Reveal>
+                    ))}
                 </div>
             </section>
 
-            {/* SECTION: FAQ */}
-            <section id="faq" className="relative z-10 mx-auto max-w-7xl px-8 pb-20">
-                <Reveal>
-                    <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6 md:p-10">
-                        <div className="flex items-end justify-between gap-6">
-                            <div>
-                                <h2 className="text-2xl md:text-3xl font-extrabold">FAQ</h2>
-                                <p className="text-gray-600 mt-2">
-                                    Nejčastější otázky kolem přihlášení a používání.
-                                </p>
+            {/* Steps */}
+            <section className="relative z-10 mx-auto max-w-6xl px-6 pb-20">
+                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-8 md:p-12">
+                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
+                        <div>
+                            <p className="text-xs text-indigo-600 font-semibold uppercase tracking-widest mb-3">Jak to funguje</p>
+                            <h2 className="text-3xl font-black text-gray-900 mb-8">Tři kroky a jsi tam</h2>
+                            <div className="space-y-5">
+                                {[
+                                    { n: "01", t: "Přihlas se přes Google", d: "Bez hesla, bezpečně, za pár sekund." },
+                                    { n: "02", t: "Vytvoř složku nebo soubor", d: "Akce jsou přímo v sidebaru." },
+                                    { n: "03", t: "Ukládej a vrať se", d: "Všechno na jednom místě, kdykoliv." },
+                                ].map((s) => (
+                                    <div key={s.n} className="flex items-start gap-4">
+                                        <span className="text-xs font-black text-indigo-500 mt-0.5 w-6 shrink-0">{s.n}</span>
+                                        <div>
+                                            <p className="font-semibold text-gray-900">{s.t}</p>
+                                            <p className="text-sm text-gray-500 mt-0.5">{s.d}</p>
+                                        </div>
+                                    </div>
+                                ))}
                             </div>
                         </div>
-
-                        {/* ✅ equal-height FAQ cards */}
-                        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4 auto-rows-fr items-stretch">
+                        <div className="flex flex-col gap-2.5">
                             {[
-                                ["Musím si vytvářet heslo?", "Ne. Přihlášení je přes Google OAuth."],
-                                [
-                                    "Můžu změnit email?",
-                                    "Email je z Google účtu a je read-only v aplikaci.",
-                                ],
-                                [
-                                    "Kde změním jméno nebo fotku?",
-                                    "V nastavení Google účtu – u nás se to pak načte.",
-                                ],
-                                [
-                                    "Co když se odhlásím?",
-                                    "Odhlásíš se z aplikace. Google účet v prohlížeči se řídí tvým nastavením.",
-                                ],
-                            ].map(([q, a], i) => (
-                                <Reveal key={q} delay={i * 70}>
-                                    <FaqItem q={q} a={a} />
-                                </Reveal>
+                                ["Formuláře", "vyplním později"],
+                                ["Dokumenty", "projdu později"],
+                                ["Screenshots", "zpracuju později"],
+                                ["Inspirace", "vrátím se k tomu"],
+                            ].map(([t, d]) => (
+                                <div key={t} className="flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm">
+                                    <span className="text-sm font-semibold text-gray-800">{t}</span>
+                                    <span className="text-xs text-gray-400">{d}</span>
+                                </div>
                             ))}
                         </div>
-
-                        <div className="mt-8 flex flex-col sm:flex-row items-center justify-between gap-4 rounded-3xl border border-gray-200 bg-gray-50 p-5">
-                            <div>
-                                <p className="font-extrabold">Připraven začít?</p>
-                                <p className="text-sm text-gray-600">
-                                    Přihlášení zabere pár sekund.
-                                </p>
-                            </div>
-                            <button
-                                onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
-                                className={[loginWhiteBtn, "px-6 py-3 justify-center"].join(" ")}
-                            >
-                                <GoogleIcon />
-                                Přihlásit se
-                            </button>
-                        </div>
                     </div>
-                </Reveal>
+                </div>
+            </section>
+
+            {/* CTA */}
+            <section className="relative z-10 mx-auto max-w-6xl px-6 pb-20">
+                <div className="rounded-2xl bg-indigo-600 p-10 md:p-16 text-center relative overflow-hidden transition shadow-lg shadow-indigo-200">
+                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-violet-500/20 to-transparent" />
+                    <h2 className="relative text-3xl md:text-4xl font-black text-white mb-3">Připraven začít?</h2>
+                    <p className="relative text-indigo-200 mb-8">Přihlášení zabere pár sekund.</p>
+                    <button
+                        onClick={() => signIn("google", { callbackUrl: "/mainpage" })}
+                        className="relative inline-flex items-center gap-2 rounded-xl bg-white px-7 py-3.5 text-sm font-bold text-indigo-600 hover:bg-indigo-50 transition shadow-xl "
+                    >
+                        <GoogleIcon />
+                        Přihlásit se přes Google
+                    </button>
+                </div>
             </section>
 
             {/* Footer */}
-            <footer className="relative z-10 border-t border-gray-200 bg-white/70 backdrop-blur">
-                <div className="mx-auto max-w-7xl px-8 py-10 flex flex-col md:flex-row gap-4 md:items-center md:justify-between">
-                    <div className="text-sm text-gray-600">
-                        <span className="font-semibold text-gray-800">Fill Out Later</span> •
-                        ukládej věci na později
-                    </div>
-                    <div className="text-sm text-gray-500">
-                        © {new Date().getFullYear()} • Přihlášení přes Google
-                    </div>
+            <footer className="relative z-10 border-t border-gray-100">
+                <div className="mx-auto max-w-6xl px-6 py-8 flex items-center justify-between text-sm text-gray-400">
+                    <span><span className="text-gray-700 font-semibold">DigiReceipts</span> · ukládej věci na později</span>
+                    <span>© {new Date().getFullYear()}</span>
                 </div>
             </footer>
-
-            {/* Simple CSS animations */}
-            <style jsx global>{`
-                /* ✅ extra overflow guard */
-                html,
-                body {
-                    overflow-x: hidden;
-                }
-
-                /* ✅ scroll reveal (legacy, not used because we use framer-motion) */
-                .reveal {
-                    opacity: 0;
-                    transform: translateY(18px);
-                    transition: opacity 650ms ease, transform 650ms ease;
-                    will-change: opacity, transform;
-                }
-                .reveal--in {
-                    opacity: 1;
-                    transform: translateY(0);
-                }
-
-                .blob {
-                    position: absolute;
-                    width: 520px;
-                    height: 520px;
-                    border-radius: 9999px;
-                    filter: blur(40px);
-                    opacity: 0.35;
-                    animation: floaty 10s ease-in-out infinite;
-                    background: radial-gradient(circle at 30% 30%, #38bdf8, transparent 60%),
-                    radial-gradient(circle at 70% 70%, #60a5fa, transparent 55%);
-                }
-                .blob-1 {
-                    top: -180px;
-                    left: -140px;
-                }
-                .blob-2 {
-                    top: 120px;
-                    right: -180px;
-                    animation-duration: 12s;
-                }
-                .blob-3 {
-                    bottom: -220px;
-                    left: 25%;
-                    animation-duration: 14s;
-                }
-                @keyframes floaty {
-                    0%,
-                    100% {
-                        transform: translate3d(0, 0, 0) scale(1);
-                    }
-                    50% {
-                        transform: translate3d(0, 18px, 0) scale(1.03);
-                    }
-                }
-            `}</style>
         </div>
     );
 }
 
 function GoogleIcon() {
     return (
-        <svg className="h-5 w-5" viewBox="0 0 48 48" aria-hidden="true">
-            <path
-                fill="#FFC107"
-                d="M43.6 20.4H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.6z"
-            />
-            <path
-                fill="#FF3D00"
-                d="M6.3 14.7l6.6 4.8C14.6 16.1 19 12 24 12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.1 29.3 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z"
-            />
-            <path
-                fill="#4CAF50"
-                d="M24 44c5.2 0 10-2 13.6-5.3l-6.3-5.2C29.4 35.1 26.8 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.5 39.6 16.2 44 24 44z"
-            />
-            <path
-                fill="#1976D2"
-                d="M43.6 20.4H42V20H24v8h11.3c-1 2.6-2.8 4.8-5 6.3l6.3 5.2C39.7 36.6 44 31.4 44 24c0-1.3-.1-2.7-.4-3.6z"
-            />
+        <svg className="h-4 w-4" viewBox="0 0 48 48" aria-hidden="true">
+            <path fill="#FFC107" d="M43.6 20.4H42V20H24v8h11.3C33.7 32.6 29.3 36 24 36c-6.6 0-12-5.4-12-12s5.4-12 12-12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.1 29.3 4 24 4 12.9 4 4 12.9 4 24s8.9 20 20 20 20-8.9 20-20c0-1.3-.1-2.7-.4-3.6z" />
+            <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8C14.6 16.1 19 12 24 12c3.1 0 5.9 1.2 8 3.2l5.7-5.7C34.1 6.1 29.3 4 24 4c-7.7 0-14.4 4.3-17.7 10.7z" />
+            <path fill="#4CAF50" d="M24 44c5.2 0 10-2 13.6-5.3l-6.3-5.2C29.4 35.1 26.8 36 24 36c-5.3 0-9.7-3.4-11.3-8.1l-6.5 5C9.5 39.6 16.2 44 24 44z" />
+            <path fill="#1976D2" d="M43.6 20.4H42V20H24v8h11.3c-1 2.6-2.8 4.8-5 6.3l6.3 5.2C39.7 36.6 44 31.4 44 24c0-1.3-.1-2.7-.4-3.6z" />
         </svg>
-    );
-}
-
-function Pill({ children }: { children: React.ReactNode }) {
-    return (
-        <div className="rounded-full border border-gray-200 bg-white px-3 py-1 text-xs font-semibold text-gray-700">
-            {children}
-        </div>
-    );
-}
-
-function FeatureCard({ title, desc }: { title: string; desc: string }) {
-    return (
-        <div className="h-full rounded-3xl border border-gray-200 bg-white p-4 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition will-change-transform flex flex-col">
-            <p className="font-extrabold">{title}</p>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{desc}</p>
-        </div>
-    );
-}
-
-function BigCard({ title, desc }: { title: string; desc: string }) {
-    return (
-        <div className="h-full rounded-3xl border border-gray-200 bg-white p-5 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition will-change-transform flex flex-col">
-            <p className="font-extrabold">{title}</p>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-2">{desc}</p>
-        </div>
-    );
-}
-
-function Step({ n, title, desc }: { n: string; title: string; desc: string }) {
-    return (
-        <div className="rounded-3xl border border-gray-200 bg-white/70 backdrop-blur p-4 hover:bg-white transition">
-            <div className="flex items-start gap-3">
-                <div className="h-9 w-9 rounded-2xl bg-sky-100 text-sky-700 font-extrabold flex items-center justify-center shrink-0">
-                    {n}
-                </div>
-                <div>
-                    <p className="font-extrabold">{title}</p>
-                    <p className="text-sm text-gray-600 mt-1">{desc}</p>
-                </div>
-            </div>
-        </div>
-    );
-}
-
-function MiniUseCase({ title, desc }: { title: string; desc: string }) {
-    return (
-        <div className="h-full rounded-3xl border border-gray-200 bg-white p-4 hover:shadow-sm hover:-translate-y-0.5 transition flex flex-col">
-            <p className="font-extrabold">{title}</p>
-            <p className="text-sm text-gray-600 mt-1 line-clamp-1">{desc}</p>
-        </div>
-    );
-}
-
-function FaqItem({ q, a }: { q: string; a: string }) {
-    return (
-        <div className="h-full rounded-3xl border border-gray-200 bg-gray-50 p-5 hover:bg-white transition flex flex-col">
-            <p className="font-extrabold">{q}</p>
-            <p className="text-sm text-gray-600 mt-2 line-clamp-3">{a}</p>
-        </div>
-    );
-}
-
-function PreviewPanel() {
-    return (
-        <div className="rounded-3xl border border-gray-200 bg-white shadow-sm p-6 hover:shadow-md transition">
-            <div className="flex items-center justify-between">
-                <p className="font-extrabold">Náhled</p>
-                <span className="text-xs text-gray-500">Desktop UI</span>
-            </div>
-
-            {/* ✅ equal-height tiles */}
-            <div className="mt-4 grid grid-cols-2 gap-4 auto-rows-fr items-stretch">
-                <PreviewTile />
-                <PreviewTile />
-                <PreviewTile />
-                <PreviewTile />
-            </div>
-
-            <div className="mt-6 rounded-2xl border border-gray-200 bg-gray-50 p-4">
-                <p className="text-sm font-extrabold">Tip</p>
-                <p className="text-sm text-gray-600 mt-1">
-                    Udržuj layout čistý: méně složek, lepší pojmenování.
-                </p>
-            </div>
-        </div>
-    );
-}
-
-function PreviewTile() {
-    return (
-        <div className="h-full min-h-[140px] rounded-3xl border border-gray-200 bg-gray-50 p-4 hover:bg-white hover:shadow-sm transition flex flex-col">
-            <div className="h-10 w-10 rounded-2xl bg-sky-100 mb-3" />
-            <div className="h-4 w-2/3 bg-gray-200/60 rounded mb-2" />
-            <div className="h-3 w-1/2 bg-gray-200/60 rounded" />
-        </div>
     );
 }

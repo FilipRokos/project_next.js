@@ -76,7 +76,7 @@ export default function AccountPage() {
 
                     <button
                         onClick={() => signOut()}
-                        className="bg-sky-500 hover:bg-sky-600 px-4 py-2 rounded-xl text-sm font-semibold text-white transition shadow-sm inline-flex items-center gap-2"
+                        className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-semibold text-white transition shadow-sm inline-flex items-center gap-2"
                     >
                         <FaSignOutAlt size={14} />
                         Odhlásit
@@ -92,7 +92,7 @@ export default function AccountPage() {
                         <h2 className="text-lg font-bold mb-4">Profil</h2>
 
                         <div className="flex items-center gap-4 p-4 rounded-3xl bg-gray-50 border border-gray-100">
-                            <div className="h-14 w-14 rounded-3xl bg-sky-100 flex items-center justify-center overflow-hidden">
+                            <div className="h-14 w-14 rounded-3xl bg-indigo-50 flex items-center justify-center overflow-hidden">
                                 {userImage ? (
                                     // nepoužívám next/image aby to bylo plug&play (domény apod.)
                                     // klidně to pak přepni na next/image
@@ -103,7 +103,7 @@ export default function AccountPage() {
                                         className="h-full w-full object-cover"
                                     />
                                 ) : (
-                                    <span className="font-bold text-sky-700">{initials || "U"}</span>
+                                    <span className="font-bold text-indigo-600">{initials || "U"}</span>
                                 )}
                             </div>
 
@@ -135,7 +135,7 @@ export default function AccountPage() {
                         {/* Account details */}
                         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <FaUserCircle />
                                 </div>
                                 <div>
@@ -161,7 +161,7 @@ export default function AccountPage() {
                         {/* Security */}
                         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <FaShieldAlt />
                                 </div>
                                 <div>
@@ -175,7 +175,7 @@ export default function AccountPage() {
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                                 <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
                                     <div className="flex items-center gap-2 text-sm font-semibold">
-                                        <FaGoogle className="text-sky-700" />
+                                        <FaGoogle className="text-indigo-600" />
                                         Google účet
                                     </div>
                                     <p className="mt-1 text-sm text-gray-500">
@@ -194,7 +194,7 @@ export default function AccountPage() {
                             <div className="mt-4 flex flex-col sm:flex-row gap-3">
                                 <button
                                     onClick={() => signOut()}
-                                    className="rounded-2xl bg-sky-500 hover:bg-sky-600 px-4 py-3 text-sm font-semibold text-white transition shadow-sm"
+                                    className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition shadow-sm"
                                 >
                                     Odhlásit z aplikace
                                 </button>

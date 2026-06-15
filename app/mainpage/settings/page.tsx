@@ -21,7 +21,7 @@ function Toggle({
             onClick={() => onChange(!enabled)}
             className={cx(
                 "relative inline-flex h-7 w-12 items-center rounded-full transition",
-                enabled ? "bg-sky-500" : "bg-gray-200"
+                enabled ? "bg-indigo-600" : "bg-gray-200"
             )}
             aria-pressed={enabled}
         >
@@ -103,7 +103,7 @@ export default function SettingsPage() {
                         disabled={saving}
                         className={cx(
                             "px-4 py-2 rounded-xl text-sm font-semibold text-white transition shadow-sm inline-flex items-center gap-2",
-                            saving ? "bg-sky-300 cursor-not-allowed" : "bg-sky-500 hover:bg-sky-600"
+                            saving ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"
                         )}
                     >
                         <FaSave size={14} />
@@ -120,7 +120,7 @@ export default function SettingsPage() {
                         <h2 className="text-lg font-bold mb-4">Účet</h2>
 
                         <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
-                            <div className="h-12 w-12 rounded-2xl bg-sky-100 flex items-center justify-center font-bold text-sky-700">
+                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center font-bold text-indigo-600">
                                 {(userName?.split(" ")[0]?.[0] ?? "U").toUpperCase()}
                             </div>
                             <div className="min-w-0">
@@ -160,7 +160,7 @@ export default function SettingsPage() {
                         {/* Notifications */}
                         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <FaBell />
                                 </div>
                                 <div>
@@ -197,7 +197,7 @@ export default function SettingsPage() {
                         {/* Security */}
                         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <FaLock />
                                 </div>
                                 <div>
@@ -231,7 +231,7 @@ export default function SettingsPage() {
                         {/* Appearance */}
                         <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-sky-100 flex items-center justify-center text-sky-700">
+                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
                                     <FaPalette />
                                 </div>
                                 <div>
@@ -258,7 +258,7 @@ export default function SettingsPage() {
                                             className={cx(
                                                 "p-4 rounded-2xl border text-sm font-semibold transition text-left",
                                                 active
-                                                    ? "border-sky-200 bg-sky-50 text-sky-700"
+                                                    ? "border-indigo-200 bg-indigo-50 text-indigo-600"
                                                     : "border-gray-200 bg-white hover:bg-gray-50 text-gray-800"
                                             )}
                                         >
