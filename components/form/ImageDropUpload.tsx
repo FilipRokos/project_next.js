@@ -135,6 +135,7 @@ export default function ImageDropUpload({
 
         if (!file) return alert("Přetáhni / vyber obrázek nebo vyfoť.");
         if (!filename.trim()) return alert("Zadej název souboru.");
+        if (filename.trim().length > 100) return alert("Název může mít maximálně 100 znaků.");
         if (!userId) return alert("Chybí userId (session).");
         if (!path) return alert("Chybí path.");
 
@@ -355,6 +356,7 @@ export default function ImageDropUpload({
                 type="text"
                 placeholder="Název obrázku"
                 value={filename}
+                maxLength={100}
                 onChange={(e) => setFilename(e.target.value)}
                 className="border border-gray-200 bg-white/80 p-2.5 rounded-2xl outline-none focus:ring-2 focus:ring-sky-200"
             />

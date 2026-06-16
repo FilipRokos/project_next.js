@@ -48,8 +48,19 @@ export const authOptions: NextAuthOptions = {
 
     session: { strategy: "jwt", maxAge: 30 * 24 * 60 * 60 * 3},
 
+    // Any auth error (cancelled consent, provider error, AccessDenied) redirects here
+    // instead of the default NextAuth error page.
+    pages: {
+        error: "/",
+    },
+
     callbacks: {
         async signIn({ account }) {
+            // No account = OAuth didn't complete successfully -> back to /
+            if (!account) {
+                return `${process.env.NEXTAUTH_URL}/`
+            }
+
             const scopes = account?.scope?.split(" ") ?? []
 
             const hasDrivePermission = scopes.includes(

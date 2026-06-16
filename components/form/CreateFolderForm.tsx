@@ -83,6 +83,7 @@ export default function CreateFolderForm({ onClose, folders = [], onSubmit }: Pr
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!folderName.trim()) return alert("Zadej název složky.");
+        if (folderName.trim().length > 100) return alert("Název může mít maximálně 100 znaků.");
 
         const formData = new FormData();
         formData.append("name", folderName);
@@ -108,6 +109,7 @@ export default function CreateFolderForm({ onClose, folders = [], onSubmit }: Pr
                     type="text"
                     placeholder="Např. Únor 2025"
                     value={folderName}
+                    maxLength={100}
                     onChange={(e) => setFolderName(e.target.value)}
                     className="w-full border border-gray-200 bg-white px-3 py-2 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-200"
                     autoFocus
