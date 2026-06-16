@@ -195,178 +195,132 @@ export default function ImageDropUpload({
     };
 
     return (
-        <div>
-        <form onSubmit={handleSubmit} className="flex flex-col gap-3">
-            <div
-                onDragEnter={(e) => {
-                    e.preventDefault();
-                    setDragOver(true);
-                }}
-                onDragOver={(e) => {
-                    e.preventDefault();
-                    setDragOver(true);
-                }}
-                onDragLeave={(e) => {
-                    e.preventDefault();
-                    setDragOver(false);
-                }}
-                onDrop={onDrop}
-                className={[
-                    "rounded-3xl border-2 border-dashed p-6 text-center transition",
-                    dragOver ? "border-sky-500 bg-sky-50" : "border-gray-300 bg-white/60",
-                ].join(" ")}
-            >
-                <input id="image" type="file" accept="image/*" onChange={onPick} className="hidden" />
+        <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-md">
+                <div className="flex items-center gap-2.5 mb-5 justify-center">
+                    <div className="h-8 w-8 rounded-md bg-slate-900 flex items-center justify-center">
+                        <span className="text-emerald-400 text-xs font-black">D</span>
+                    </div>
+                    <span className="font-semibold tracking-tight text-slate-900">DigiReceipts</span>
+                </div>
 
-                {/* Native phone camera (opens the back camera directly on mobile) */}
-                <input
-                    ref={captureInputRef}
-                    type="file"
-                    accept="image/*"
-                    capture="environment"
-                    onChange={onPick}
-                    className="hidden"
-                />
+                <div className="bg-white border border-slate-200 rounded-xl p-5 shadow-sm">
+                    <div className="mb-4">
+                        <h1 className="text-sm font-semibold tracking-tight text-slate-900">Nahrát účtenku</h1>
+                        <p className="text-xs text-slate-400 mt-0.5">Vyfoť nebo vyber obrázek účtenky.</p>
+                    </div>
 
-                {mode === "camera" && (
-                    <div className="flex flex-col gap-3 items-center">
-                        <div className="relative w-full h-80 overflow-hidden rounded-2xl border bg-black">
-                            <Webcam
-                                ref={webcamRef}
-                                audio={false}
-                                screenshotFormat="image/jpeg"
-                                screenshotQuality={0.95}
-                                videoConstraints={{
-                                    facingMode,
-                                    aspectRatio: 1.3333333333,
-                                }}
-                                className="absolute inset-0 w-full h-full object-cover"
+                    <form onSubmit={handleSubmit} className="flex flex-col gap-3">
+                        <div
+                            onDragEnter={(e) => { e.preventDefault(); setDragOver(true); }}
+                            onDragOver={(e) => { e.preventDefault(); setDragOver(true); }}
+                            onDragLeave={(e) => { e.preventDefault(); setDragOver(false); }}
+                            onDrop={onDrop}
+                            className={[
+                                "rounded-xl border-2 border-dashed p-6 text-center transition",
+                                dragOver ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-slate-50",
+                            ].join(" ")}
+                        >
+                            <input id="image" type="file" accept="image/*" onChange={onPick} className="hidden" />
+
+                            {/* Native phone camera (opens the back camera directly on mobile) */}
+                            <input
+                                ref={captureInputRef}
+                                type="file"
+                                accept="image/*"
+                                capture="environment"
+                                onChange={onPick}
+                                className="hidden"
                             />
 
-                            <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
-                                Zamiř na účtenku
-                            </div>
+                            {mode === "camera" && (
+                                <div className="flex flex-col gap-3 items-center">
+                                    <div className="relative w-full h-80 overflow-hidden rounded-lg border border-slate-200 bg-slate-900">
+                                        <Webcam
+                                            ref={webcamRef}
+                                            audio={false}
+                                            screenshotFormat="image/jpeg"
+                                            screenshotQuality={0.95}
+                                            videoConstraints={{ facingMode, aspectRatio: 1.3333333333 }}
+                                            className="absolute inset-0 w-full h-full object-cover"
+                                        />
+                                        <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-md bg-slate-900/70 px-3 py-1 text-xs text-white">
+                                            Zamiř na účtenku
+                                        </div>
+                                    </div>
+
+                                    <div className="flex gap-2 justify-center flex-wrap">
+                                        <button type="button" onClick={() => setMode("idle")} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">
+                                            Zrušit
+                                        </button>
+                                        <button type="button" onClick={() => setFacingMode((m) => (m === "user" ? "environment" : "user"))} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">
+                                            Přepnout kameru
+                                        </button>
+                                        <button type="button" onClick={takePhoto} className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm">
+                                            Vyfotit
+                                        </button>
+                                    </div>
+
+                                    <p className="text-xs text-slate-400">Zarovnej účtenku do záběru a stiskni tlačítko.</p>
+                                </div>
+                            )}
+
+                            {mode === "captured" && captured && (
+                                <div className="flex flex-col gap-3 items-center">
+                                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                                    <img src={captured} alt="captured" className="max-h-72 rounded-lg border border-slate-200 object-contain bg-white" />
+                                    <div className="flex gap-2 justify-center">
+                                        <button type="button" onClick={() => { setCaptured(null); setMode("camera"); }} className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition">
+                                            Znovu
+                                        </button>
+                                        <button type="button" onClick={useCaptured} className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm">
+                                            Použít fotku
+                                        </button>
+                                    </div>
+                                </div>
+                            )}
+
+                            {mode === "idle" && !file && (
+                                <div className="flex flex-col gap-3 items-center">
+                                    <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                                        <span className="text-emerald-500 text-lg">↑</span>
+                                    </div>
+                                    <p className="text-sm text-slate-500">
+                                        Přetáhni sem obrázek nebo{" "}
+                                        <label htmlFor="image" className="text-emerald-600 underline cursor-pointer font-semibold">vyber soubor</label>
+                                    </p>
+                                    <button type="button" onClick={startCamera} className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm">
+                                        Vyfotit účtenku
+                                    </button>
+                                    <p className="text-[11px] text-slate-400">png, jpg, webp, gif</p>
+                                </div>
+                            )}
+
+                            {mode === "idle" && file && (
+                                <div className="flex flex-col gap-3 items-center">
+                                    {previewUrl && (
+                                        // eslint-disable-next-line @next/next/no-img-element
+                                        <img src={previewUrl} alt="preview" className="max-h-48 rounded-lg border border-slate-200 object-contain bg-white" />
+                                    )}
+                                    <div className="text-sm text-slate-600 text-left w-full">
+                                        <div className="truncate"><span className="font-semibold text-slate-800">Soubor:</span> {file.name}</div>
+                                        <div className="tnum"><span className="font-semibold text-slate-800">Velikost:</span> {(file.size / 1024 / 1024).toFixed(2)} MB</div>
+                                    </div>
+                                    <button type="button" onClick={clear} className="text-sm text-rose-600 hover:text-rose-700 font-medium transition">Odebrat</button>
+                                </div>
+                            )}
                         </div>
-
-                        <div className="flex gap-2 justify-center flex-wrap">
-                            <button
-                                type="button"
-                                onClick={() => setMode("idle")}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
-                            >
-                                Zrušit
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={() => setFacingMode((m) => (m === "user" ? "environment" : "user"))}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
-                            >
-                                Přepnout kameru
-                            </button>
-
-                            <button
-                                type="button"
-                                onClick={takePhoto}
-                                className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
-                            >
-                                Vyfotit
-                            </button>
-                        </div>
-
-                        <p className="text-xs text-gray-500">
-                            Zarovnej účtenku do záběru a stiskni tlačítko.
-                        </p>
-                    </div>
-                )}
-
-                {mode === "captured" && captured && (
-                    <div className="flex flex-col gap-3 items-center">
-                        {/* eslint-disable-next-line @next/next/no-img-element */}
-                        <img
-                            src={captured}
-                            alt="captured"
-                            className="max-h-72 rounded-2xl border object-contain bg-white"
-                        />
-
-                        <div className="flex gap-2 justify-center">
-                            <button
-                                type="button"
-                                onClick={() => {
-                                    setCaptured(null);
-                                    setMode("camera");
-                                }}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
-                            >
-                                Znovu
-                            </button>
-                            <button
-                                type="button"
-                                onClick={useCaptured}
-                                className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
-                            >
-                                Použít fotku
-                            </button>
-                        </div>
-                    </div>
-                )}
-
-                {mode === "idle" && !file && (
-                    <div className="flex flex-col gap-2 items-center">
-                        <a href={"https://deltassie-my.sharepoint.com/:f:/g/personal/rokofi_delta-studenti_cz/IgAdlvSfE_8qR5POdR4uwOEcAVBVLb6PsG2FAIHuUdKN46M"} className="text-sky-700 underline cursor-pointer font-semibold">
-                            nahaj
-                        </a>
 
                         <button
-                            type="button"
-                            onClick={startCamera}
-                            className="px-4 py-2 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
+                            type="submit"
+                            disabled={loading}
+                            className="w-full px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-50 shadow-sm"
                         >
-                            Vyfotit účtenku
+                            {loading ? "Nahrávám..." : "Nahrát"}
                         </button>
-
-                        <p className="text-xs text-gray-500">png, jpg, webp, gif</p>
-                    </div>
-                )}
-
-                {mode === "idle" && file && (
-                    <div className="flex flex-col gap-3 items-center">
-                        {previewUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                src={previewUrl}
-                                alt="preview"
-                                className="max-h-48 rounded-2xl border object-contain bg-white"
-                            />
-                        )}
-
-                        <div className="text-sm text-gray-700 text-left w-full">
-                            <div className="truncate">
-                                <b>Soubor:</b> {file.name}
-                            </div>
-                            <div>
-                                <b>Velikost:</b> {(file.size / 1024 / 1024).toFixed(2)} MB
-                            </div>
-                        </div>
-
-                        <button type="button" onClick={clear} className="text-sm text-red-600 underline">
-                            Odebrat
-                        </button>
-                    </div>
-                )}
+                    </form>
+                </div>
             </div>
-
-            <div className="">
-
-                <button
-                    type="submit"
-                    disabled={loading}
-                    className="px-4  py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition disabled:opacity-60"
-                >
-                    {loading ? "Nahrávám..." : "Nahrát"}
-                </button>
-            </div>
-        </form>
         </div>
     );
 }

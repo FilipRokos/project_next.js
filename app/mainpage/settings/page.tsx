@@ -8,30 +8,42 @@ import { FaArrowLeft, FaBell, FaLock, FaPalette, FaSave } from "react-icons/fa";
 const cx = (...classes: Array<string | false | undefined>) =>
     classes.filter(Boolean).join(" ");
 
-function Toggle({
-                    enabled,
-                    onChange,
-                }: {
-    enabled: boolean;
-    onChange: (v: boolean) => void;
-}) {
+function Toggle({ enabled, onChange }: { enabled: boolean; onChange: (v: boolean) => void }) {
     return (
         <button
             type="button"
             onClick={() => onChange(!enabled)}
             className={cx(
-                "relative inline-flex h-7 w-12 items-center rounded-full transition",
-                enabled ? "bg-indigo-600" : "bg-gray-200"
+                "relative inline-flex h-6 w-11 items-center rounded-full transition shrink-0",
+                enabled ? "bg-emerald-600" : "bg-slate-200"
             )}
             aria-pressed={enabled}
         >
-      <span
-          className={cx(
-              "inline-block h-5 w-5 transform rounded-full bg-white transition",
-              enabled ? "translate-x-6" : "translate-x-1"
-          )}
-      />
+            <span
+                className={cx(
+                    "inline-block h-4 w-4 transform rounded-full bg-white transition shadow-sm",
+                    enabled ? "translate-x-6" : "translate-x-1"
+                )}
+            />
         </button>
+    );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+    return <div className="bg-white border border-slate-200 rounded-xl p-5">{children}</div>;
+}
+
+function SectionHead({ icon, title, desc }: { icon: React.ReactNode; title: string; desc: string }) {
+    return (
+        <div className="flex items-center gap-3 mb-4">
+            <div className="h-9 w-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                {icon}
+            </div>
+            <div>
+                <h3 className="text-sm font-semibold text-slate-900">{title}</h3>
+                <p className="text-xs text-slate-400">{desc}</p>
+            </div>
+        </div>
     );
 }
 
@@ -39,12 +51,10 @@ export default function SettingsPage() {
     const router = useRouter();
     const { data: session, status } = useSession();
 
-    // demo settings state
     const [emailNotifs, setEmailNotifs] = useState(true);
     const [pushNotifs, setPushNotifs] = useState(false);
     const [twoFactor, setTwoFactor] = useState(false);
     const [theme, setTheme] = useState<"system" | "light" | "dark">("system");
-
     const [saving, setSaving] = useState(false);
 
     useEffect(() => {
@@ -53,8 +63,8 @@ export default function SettingsPage() {
 
     if (status === "loading") {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-400 animate-pulse text-lg">Načítám…</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="h-5 w-5 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
             </div>
         );
     }
@@ -64,37 +74,30 @@ export default function SettingsPage() {
     const userEmail = session.user?.email ?? "";
 
     const onSave = async () => {
-        // TODO: napoj na API
         setSaving(true);
         try {
             await new Promise((r) => setTimeout(r, 600));
-            // toast/snackbar si můžeš doplnit
         } finally {
             setSaving(false);
         }
     };
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             {/* Top bar */}
-            <header className="bg-white/90 backdrop-blur border-b border-gray-200">
-                <div className="mx-auto max-w-7xl px-8 py-4 flex justify-between items-center">
+            <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
+                <div className="mx-auto max-w-5xl px-6 h-14 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => router.push("/mainpage")}
-                            className="p-2 rounded-xl hover:bg-gray-100 transition"
+                            className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 transition"
                             aria-label="Zpět"
                         >
-                            <FaArrowLeft size={16} />
+                            <FaArrowLeft size={13} />
                         </button>
-
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold leading-tight">
-                                Nastavení
-                            </h1>
-                            <p className="hidden md:block text-xs text-gray-500">
-                                Účet, upozornění, zabezpečení a vzhled
-                            </p>
+                            <h1 className="text-sm font-semibold tracking-tight">Nastavení</h1>
+                            <p className="hidden md:block text-[11px] text-slate-400">Účet, upozornění, zabezpečení a vzhled</p>
                         </div>
                     </div>
 
@@ -102,177 +105,127 @@ export default function SettingsPage() {
                         onClick={onSave}
                         disabled={saving}
                         className={cx(
-                            "px-4 py-2 rounded-xl text-sm font-semibold text-white transition shadow-sm inline-flex items-center gap-2",
-                            saving ? "bg-indigo-300 cursor-not-allowed" : "bg-indigo-600 hover:bg-indigo-500"
+                            "px-4 py-1.5 rounded-md text-xs font-semibold text-white transition inline-flex items-center gap-2 shadow-sm",
+                            saving ? "bg-emerald-400 cursor-not-allowed" : "bg-emerald-600 hover:bg-emerald-700"
                         )}
                     >
-                        <FaSave size={14} />
+                        <FaSave size={12} />
                         {saving ? "Ukládám…" : "Uložit změny"}
                     </button>
                 </div>
             </header>
 
             {/* Content */}
-            <div className="mx-auto max-w-7xl px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    {/* Left: Account card */}
-                    <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                        <h2 className="text-lg font-bold mb-4">Účet</h2>
-
-                        <div className="flex items-center gap-3 p-3 rounded-2xl bg-gray-50 border border-gray-100">
-                            <div className="h-12 w-12 rounded-2xl bg-indigo-50 flex items-center justify-center font-bold text-indigo-600">
+            <div className="mx-auto max-w-5xl px-6 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+                    {/* Account */}
+                    <Card>
+                        <h2 className="text-sm font-semibold mb-4">Účet</h2>
+                        <div className="flex items-center gap-3 p-3 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="h-11 w-11 rounded-lg bg-slate-900 flex items-center justify-center font-bold text-emerald-400">
                                 {(userName?.split(" ")[0]?.[0] ?? "U").toUpperCase()}
                             </div>
                             <div className="min-w-0">
-                                <p className="font-semibold truncate">{userName}</p>
-                                <p className="text-xs text-gray-500 truncate">{userEmail}</p>
+                                <p className="text-sm font-semibold truncate">{userName}</p>
+                                <p className="text-xs text-slate-400 truncate">{userEmail}</p>
                             </div>
                         </div>
 
-                        <div className="mt-5 space-y-3">
+                        <div className="mt-4 space-y-3">
                             <div>
-                                <label className="text-sm font-medium text-gray-700">
-                                    Zobrazované jméno
-                                </label>
+                                <label className="text-xs font-semibold text-slate-500">Zobrazované jméno</label>
                                 <input
                                     defaultValue={userName}
-                                    className="mt-1 w-full rounded-2xl border border-gray-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-sky-200"
+                                    className="mt-1 w-full rounded-lg border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition"
                                     placeholder="Např. Jan Novák"
                                 />
                             </div>
-
                             <div>
-                                <label className="text-sm font-medium text-gray-700">Email</label>
+                                <label className="text-xs font-semibold text-slate-500">Email</label>
                                 <input
                                     defaultValue={userEmail}
                                     disabled
-                                    className="mt-1 w-full rounded-2xl border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-500"
+                                    className="mt-1 w-full rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm text-slate-400"
                                 />
-                                <p className="mt-1 text-xs text-gray-500">
-                                    Email je spravovaný přes přihlášení (NextAuth).
-                                </p>
+                                <p className="mt-1 text-[11px] text-slate-400">Email je spravovaný přes přihlášení (NextAuth).</p>
                             </div>
                         </div>
-                    </div>
+                    </Card>
 
-                    {/* Right: Settings cards */}
-                    <div className="lg:col-span-2 space-y-6">
+                    {/* Right column */}
+                    <div className="lg:col-span-2 space-y-5">
                         {/* Notifications */}
-                        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <FaBell />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold">Upozornění</h3>
-                                    <p className="text-sm text-gray-500">
-                                        Nastav si, co ti máme posílat.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="space-y-4">
-                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                        <Card>
+                            <SectionHead icon={<FaBell size={13} />} title="Upozornění" desc="Nastav si, co ti máme posílat." />
+                            <div className="space-y-2.5">
+                                <div className="flex items-center justify-between gap-4 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                                     <div>
-                                        <p className="font-semibold">Emailová upozornění</p>
-                                        <p className="text-sm text-gray-500">
-                                            Nové soubory, sdílení, důležité změny.
-                                        </p>
+                                        <p className="text-sm font-semibold">Emailová upozornění</p>
+                                        <p className="text-xs text-slate-400">Nové soubory, sdílení, důležité změny.</p>
                                     </div>
                                     <Toggle enabled={emailNotifs} onChange={setEmailNotifs} />
                                 </div>
-
-                                <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
+                                <div className="flex items-center justify-between gap-4 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                                     <div>
-                                        <p className="font-semibold">Push notifikace</p>
-                                        <p className="text-sm text-gray-500">
-                                            Upozornění v prohlížeči / mobilu.
-                                        </p>
+                                        <p className="text-sm font-semibold">Push notifikace</p>
+                                        <p className="text-xs text-slate-400">Upozornění v prohlížeči / mobilu.</p>
                                     </div>
                                     <Toggle enabled={pushNotifs} onChange={setPushNotifs} />
                                 </div>
                             </div>
-                        </section>
+                        </Card>
 
                         {/* Security */}
-                        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <FaLock />
-                                </div>
+                        <Card>
+                            <SectionHead icon={<FaLock size={13} />} title="Zabezpečení" desc="Základní bezpečnostní nastavení." />
+                            <div className="flex items-center justify-between gap-4 p-3.5 rounded-lg bg-slate-50 border border-slate-200">
                                 <div>
-                                    <h3 className="text-lg font-bold">Zabezpečení</h3>
-                                    <p className="text-sm text-gray-500">
-                                        Základní bezpečnostní nastavení.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="flex items-center justify-between gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100">
-                                <div>
-                                    <p className="font-semibold">Dvoufázové ověření (2FA)</p>
-                                    <p className="text-sm text-gray-500">
-                                        Doporučeno pro lepší ochranu účtu.
-                                    </p>
+                                    <p className="text-sm font-semibold">Dvoufázové ověření (2FA)</p>
+                                    <p className="text-xs text-slate-400">Doporučeno pro lepší ochranu účtu.</p>
                                 </div>
                                 <Toggle enabled={twoFactor} onChange={setTwoFactor} />
                             </div>
-
-                            <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                <button className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 text-sm font-semibold transition">
+                            <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                                <button className="rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold transition">
                                     Změnit heslo
                                 </button>
-                                <button className="rounded-2xl border border-red-200 bg-white hover:bg-red-50 px-4 py-3 text-sm font-semibold text-red-600 transition">
+                                <button className="rounded-lg border border-rose-200 bg-white hover:bg-rose-50 px-4 py-2.5 text-sm font-semibold text-rose-600 transition">
                                     Odhlásit ostatní zařízení
                                 </button>
                             </div>
-                        </section>
+                        </Card>
 
                         {/* Appearance */}
-                        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                            <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <FaPalette />
-                                </div>
-                                <div>
-                                    <h3 className="text-lg font-bold">Vzhled</h3>
-                                    <p className="text-sm text-gray-500">
-                                        Vyber si téma aplikace.
-                                    </p>
-                                </div>
-                            </div>
-
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                                {(
-                                    [
-                                        { key: "system", label: "Systém" },
-                                        { key: "light", label: "Světlé" },
-                                        { key: "dark", label: "Tmavé" },
-                                    ] as const
-                                ).map((t) => {
+                        <Card>
+                            <SectionHead icon={<FaPalette size={13} />} title="Vzhled" desc="Vyber si téma aplikace." />
+                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                                {([
+                                    { key: "system", label: "Systém" },
+                                    { key: "light", label: "Světlé" },
+                                    { key: "dark", label: "Tmavé" },
+                                ] as const).map((t) => {
                                     const active = theme === t.key;
                                     return (
                                         <button
                                             key={t.key}
                                             onClick={() => setTheme(t.key)}
                                             className={cx(
-                                                "p-4 rounded-2xl border text-sm font-semibold transition text-left",
+                                                "p-3.5 rounded-lg border text-sm font-semibold transition text-left",
                                                 active
-                                                    ? "border-indigo-200 bg-indigo-50 text-indigo-600"
-                                                    : "border-gray-200 bg-white hover:bg-gray-50 text-gray-800"
+                                                    ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                    : "border-slate-200 bg-white hover:bg-slate-50 text-slate-700"
                                             )}
                                         >
                                             {t.label}
-                                            <div className="mt-2 h-2 w-16 rounded-full bg-gray-200" />
+                                            <div className={cx("mt-2 h-1.5 w-14 rounded-full", active ? "bg-emerald-300" : "bg-slate-200")} />
                                         </button>
                                     );
                                 })}
                             </div>
-
-                            <p className="mt-3 text-xs text-gray-500">
-                                Téma zatím jen UI state – napojíš na `next-themes` nebo vlastní řešení.
+                            <p className="mt-3 text-[11px] text-slate-400">
+                                Téma zatím jen UI state — napojíš na `next-themes` nebo vlastní řešení.
                             </p>
-                        </section>
+                        </Card>
                     </div>
                 </div>
             </div>

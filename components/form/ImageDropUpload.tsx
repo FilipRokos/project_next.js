@@ -215,15 +215,15 @@ export default function ImageDropUpload({
                 }}
                 onDrop={onDrop}
                 className={[
-                    "rounded-3xl border-2 border-dashed p-6 text-center transition",
-                    dragOver ? "border-sky-500 bg-sky-50" : "border-gray-300 bg-white/60",
+                    "rounded-xl border-2 border-dashed p-6 text-center transition",
+                    dragOver ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-slate-50",
                 ].join(" ")}
             >
                 <input id="image" type="file" accept="image/*" onChange={onPick} className="hidden" />
 
                 {mode === "camera" && (
                     <div className="flex flex-col gap-3 items-center">
-                        <div className="relative w-full h-80 overflow-hidden rounded-2xl border bg-black">
+                        <div className="relative w-full h-80 overflow-hidden rounded-lg border border-slate-200 bg-slate-900">
                             <Webcam
                                 ref={webcamRef}
                                 audio={false}
@@ -236,7 +236,7 @@ export default function ImageDropUpload({
                                 className="absolute inset-0 w-full h-full object-cover"
                             />
 
-                            <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-full bg-black/60 px-3 py-1 text-xs text-white">
+                            <div className="absolute left-1/2 top-3 -translate-x-1/2 rounded-md bg-slate-900/70 px-3 py-1 text-xs text-white">
                                 Zamiř na účtenku
                             </div>
                         </div>
@@ -245,7 +245,7 @@ export default function ImageDropUpload({
                             <button
                                 type="button"
                                 onClick={() => setMode("idle")}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
+                                className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                             >
                                 Zrušit
                             </button>
@@ -253,7 +253,7 @@ export default function ImageDropUpload({
                             <button
                                 type="button"
                                 onClick={() => setFacingMode((m) => (m === "user" ? "environment" : "user"))}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
+                                className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                             >
                                 Přepnout kameru
                             </button>
@@ -261,13 +261,13 @@ export default function ImageDropUpload({
                             <button
                                 type="button"
                                 onClick={takePhoto}
-                                className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
+                                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm"
                             >
                                 Vyfotit
                             </button>
                         </div>
 
-                        <p className="text-xs text-gray-500">
+                        <p className="text-xs text-slate-400">
                             Zarovnej účtenku do záběru a stiskni tlačítko.
                         </p>
                     </div>
@@ -279,7 +279,7 @@ export default function ImageDropUpload({
                         <img
                             src={captured}
                             alt="captured"
-                            className="max-h-72 rounded-2xl border object-contain bg-white"
+                            className="max-h-72 rounded-lg border border-slate-200 object-contain bg-white"
                         />
 
                         <div className="flex gap-2 justify-center">
@@ -289,14 +289,14 @@ export default function ImageDropUpload({
                                     setCaptured(null);
                                     setMode("camera");
                                 }}
-                                className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-800 font-semibold text-sm transition"
+                                className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                             >
                                 Znovu
                             </button>
                             <button
                                 type="button"
                                 onClick={useCaptured}
-                                className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
+                                className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm"
                             >
                                 Použít fotku
                             </button>
@@ -305,10 +305,13 @@ export default function ImageDropUpload({
                 )}
 
                 {mode === "idle" && !file && (
-                    <div className="flex flex-col gap-2 items-center">
-                        <p className="text-sm text-gray-600">
+                    <div className="flex flex-col gap-3 items-center">
+                        <div className="h-10 w-10 rounded-lg bg-white border border-slate-200 flex items-center justify-center">
+                            <span className="text-emerald-500 text-lg">↑</span>
+                        </div>
+                        <p className="text-sm text-slate-500">
                             Přetáhni sem obrázek nebo{" "}
-                            <label htmlFor="image" className="text-sky-700 underline cursor-pointer font-semibold">
+                            <label htmlFor="image" className="text-emerald-600 underline cursor-pointer font-semibold">
                                 vyber soubor
                             </label>
                         </p>
@@ -316,12 +319,12 @@ export default function ImageDropUpload({
                         <button
                             type="button"
                             onClick={startCamera}
-                            className="px-4 py-2 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition"
+                            className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition shadow-sm"
                         >
                             Vyfotit účtenku
                         </button>
 
-                        <p className="text-xs text-gray-500">png, jpg, webp, gif</p>
+                        <p className="text-[11px] text-slate-400">png, jpg, webp, gif</p>
                     </div>
                 )}
 
@@ -332,47 +335,50 @@ export default function ImageDropUpload({
                             <img
                                 src={previewUrl}
                                 alt="preview"
-                                className="max-h-48 rounded-2xl border object-contain bg-white"
+                                className="max-h-48 rounded-lg border border-slate-200 object-contain bg-white"
                             />
                         )}
 
-                        <div className="text-sm text-gray-700 text-left w-full">
+                        <div className="text-sm text-slate-600 text-left w-full">
                             <div className="truncate">
-                                <b>Soubor:</b> {file.name}
+                                <span className="font-semibold text-slate-800">Soubor:</span> {file.name}
                             </div>
-                            <div>
-                                <b>Velikost:</b> {(file.size / 1024 / 1024).toFixed(2)} MB
+                            <div className="tnum">
+                                <span className="font-semibold text-slate-800">Velikost:</span> {(file.size / 1024 / 1024).toFixed(2)} MB
                             </div>
                         </div>
 
-                        <button type="button" onClick={clear} className="text-sm text-red-600 underline">
+                        <button type="button" onClick={clear} className="text-sm text-rose-600 hover:text-rose-700 font-medium transition">
                             Odebrat
                         </button>
                     </div>
                 )}
             </div>
 
-            <input
-                type="text"
-                placeholder="Název obrázku"
-                value={filename}
-                maxLength={100}
-                onChange={(e) => setFilename(e.target.value)}
-                className="border border-gray-200 bg-white/80 p-2.5 rounded-2xl outline-none focus:ring-2 focus:ring-sky-200"
-            />
+            <div>
+                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Název účtenky</label>
+                <input
+                    type="text"
+                    placeholder="Např. Nákup Lidl"
+                    value={filename}
+                    maxLength={100}
+                    onChange={(e) => setFilename(e.target.value)}
+                    className="w-full border border-slate-200 bg-white px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition"
+                />
+            </div>
 
-            <div className="flex gap-2 justify-end">
+            <div className="flex gap-2 justify-end pt-1">
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2.5 rounded-2xl border border-gray-200 bg-white/80 hover:bg-white text-gray-800 font-semibold text-sm transition"
+                    className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                 >
                     Zrušit
                 </button>
                 <button
                     type="submit"
                     disabled={loading}
-                    className="px-4 py-2.5 rounded-2xl bg-sky-500 hover:bg-sky-600 text-white font-semibold text-sm transition disabled:opacity-60"
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-50 shadow-sm"
                 >
                     {loading ? "Nahrávám..." : "Nahrát"}
                 </button>

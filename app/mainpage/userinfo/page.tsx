@@ -3,20 +3,19 @@
 import { useSession, signOut } from "next-auth/react";
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
-import {FaArrowLeft, FaGoogle, FaShieldAlt, FaUserCircle, FaSignOutAlt,} from "react-icons/fa";
-
-const cx = (...classes: Array<string | false | undefined>) =>
-    classes.filter(Boolean).join(" ");
+import { FaArrowLeft, FaGoogle, FaShieldAlt, FaUserCircle, FaSignOutAlt } from "react-icons/fa";
 
 function InfoRow({ label, value }: { label: string; value: string }) {
     return (
-        <div className="flex items-start justify-between gap-6 py-3 border-b border-gray-100 last:border-b-0">
-            <p className="text-sm text-gray-500">{label}</p>
-            <p className="text-sm font-semibold text-gray-800 text-right break-all">
-                {value}
-            </p>
+        <div className="flex items-start justify-between gap-6 py-2.5 border-b border-slate-100 last:border-b-0">
+            <p className="text-sm text-slate-400">{label}</p>
+            <p className="text-sm font-semibold text-slate-700 text-right break-all">{value}</p>
         </div>
     );
+}
+
+function Card({ children }: { children: React.ReactNode }) {
+    return <div className="bg-white border border-slate-200 rounded-xl p-5">{children}</div>;
 }
 
 export default function AccountPage() {
@@ -29,8 +28,8 @@ export default function AccountPage() {
 
     if (status === "loading") {
         return (
-            <div className="min-h-screen flex items-center justify-center bg-gray-50">
-                <p className="text-gray-400 animate-pulse text-lg">Načítám…</p>
+            <div className="min-h-screen flex items-center justify-center bg-slate-50">
+                <div className="h-5 w-5 rounded-full border-2 border-emerald-600 border-t-transparent animate-spin" />
             </div>
         );
     }
@@ -39,174 +38,141 @@ export default function AccountPage() {
     const userName = session.user?.name ?? "Uživatel";
     const userEmail = session.user?.email ?? "—";
     const userImage = session.user?.image ?? "";
-    const initials = userName
-        .split(" ")
-        .slice(0, 2)
-        .map((p:string) => p[0]?.toUpperCase())
-        .join("");
-
-    // NextAuth session obvykle neobsahuje provider přímo.
-    // UI říkáme "Google login" podle tvého použití.
+    const initials = userName.split(" ").slice(0, 2).map((p: string) => p[0]?.toUpperCase()).join("");
     const providerLabel = "Google";
     const createdLabel = "Spravováno přes Google účet";
 
     return (
-        <div className="min-h-screen bg-gray-50 text-gray-800">
+        <div className="min-h-screen bg-slate-50 text-slate-900">
             {/* Top bar */}
-            <header className="bg-white/90 backdrop-blur border-b border-gray-200">
-                <div className="mx-auto max-w-7xl px-8 py-4 flex justify-between items-center">
+            <header className="sticky top-0 z-30 bg-white border-b border-slate-200">
+                <div className="mx-auto max-w-5xl px-6 h-14 flex justify-between items-center">
                     <div className="flex items-center gap-3">
                         <button
                             onClick={() => router.push("/mainpage")}
-                            className="p-2 rounded-xl hover:bg-gray-100 transition"
+                            className="h-8 w-8 rounded-md border border-slate-200 hover:bg-slate-50 flex items-center justify-center text-slate-500 transition"
                             aria-label="Zpět"
                         >
-                            <FaArrowLeft size={16} />
+                            <FaArrowLeft size={13} />
                         </button>
-
                         <div>
-                            <h1 className="text-xl md:text-2xl font-bold leading-tight">
-                                Účet
-                            </h1>
-                            <p className="hidden md:block text-xs text-gray-500">
-                                Profil a přihlášení přes {providerLabel}
-                            </p>
+                            <h1 className="text-sm font-semibold tracking-tight">Účet</h1>
+                            <p className="hidden md:block text-[11px] text-slate-400">Profil a přihlášení přes {providerLabel}</p>
                         </div>
                     </div>
 
                     <button
                         onClick={() => signOut()}
-                        className="bg-indigo-600 hover:bg-indigo-500 px-4 py-2 rounded-xl text-sm font-semibold text-white transition shadow-sm inline-flex items-center gap-2"
+                        className="px-4 py-1.5 rounded-md text-xs font-semibold text-white transition inline-flex items-center gap-2 bg-slate-900 hover:bg-slate-800"
                     >
-                        <FaSignOutAlt size={14} />
+                        <FaSignOutAlt size={12} />
                         Odhlásit
                     </button>
                 </div>
             </header>
 
             {/* Content */}
-            <div className="mx-auto max-w-7xl px-8 py-8">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="mx-auto max-w-5xl px-6 py-8">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
                     {/* Profile card */}
-                    <div className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
-                        <h2 className="text-lg font-bold mb-4">Profil</h2>
-
-                        <div className="flex items-center gap-4 p-4 rounded-3xl bg-gray-50 border border-gray-100">
-                            <div className="h-14 w-14 rounded-3xl bg-indigo-50 flex items-center justify-center overflow-hidden">
+                    <Card>
+                        <h2 className="text-sm font-semibold mb-4">Profil</h2>
+                        <div className="flex items-center gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
+                            <div className="h-14 w-14 rounded-xl bg-slate-900 flex items-center justify-center overflow-hidden">
                                 {userImage ? (
-                                    // nepoužívám next/image aby to bylo plug&play (domény apod.)
-                                    // klidně to pak přepni na next/image
                                     // eslint-disable-next-line @next/next/no-img-element
-                                    <img
-                                        src={userImage}
-                                        alt="Avatar"
-                                        className="h-full w-full object-cover"
-                                    />
+                                    <img src={userImage} alt="Avatar" className="h-full w-full object-cover" />
                                 ) : (
-                                    <span className="font-bold text-indigo-600">{initials || "U"}</span>
+                                    <span className="font-bold text-emerald-400">{initials || "U"}</span>
                                 )}
                             </div>
-
                             <div className="min-w-0">
                                 <p className="text-base font-bold truncate">{userName}</p>
-                                <p className="text-sm text-gray-500 truncate">{userEmail}</p>
+                                <p className="text-sm text-slate-400 truncate">{userEmail}</p>
                             </div>
                         </div>
 
-                        <div className="mt-5 space-y-3">
+                        <div className="mt-4 space-y-2.5">
                             <button
                                 onClick={() => router.push("/mainpage/settings")}
-                                className="w-full rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 text-sm font-semibold transition"
+                                className="w-full rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold transition"
                             >
                                 Otevřít nastavení
                             </button>
-
                             <button
                                 onClick={() => router.push("/mainpage")}
-                                className="w-full rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 text-sm font-semibold transition"
+                                className="w-full rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold transition"
                             >
                                 Zpět na hlavní stránku
                             </button>
                         </div>
-                    </div>
+                    </Card>
 
                     {/* Details */}
-                    <div className="lg:col-span-2 space-y-6">
-                        {/* Account details */}
-                        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
+                    <div className="lg:col-span-2 space-y-5">
+                        <Card>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <FaUserCircle />
+                                <div className="h-9 w-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                                    <FaUserCircle size={15} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold">Detaily účtu</h3>
-                                    <p className="text-sm text-gray-500">
-                                        Tyto údaje pochází z přihlášení přes Google.
-                                    </p>
+                                    <h3 className="text-sm font-semibold">Detaily účtu</h3>
+                                    <p className="text-xs text-slate-400">Tyto údaje pochází z přihlášení přes Google.</p>
                                 </div>
                             </div>
 
-                            <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                            <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                                 <InfoRow label="Jméno" value={userName} />
                                 <InfoRow label="Email" value={userEmail} />
                                 <InfoRow label="Přihlášení" value={`${providerLabel} OAuth`} />
                                 <InfoRow label="Správa účtu" value={createdLabel} />
                             </div>
 
-                            <p className="mt-3 text-xs text-gray-500">
-                                Pokud chceš změnit jméno/fotku, uprav to ve svém Google účtu – tady se to potom automaticky projeví.
+                            <p className="mt-3 text-[11px] text-slate-400">
+                                Pokud chceš změnit jméno/fotku, uprav to ve svém Google účtu — tady se to potom automaticky projeví.
                             </p>
-                        </section>
+                        </Card>
 
-                        {/* Security */}
-                        <section className="bg-white border border-gray-200 rounded-3xl shadow-sm p-6">
+                        <Card>
                             <div className="flex items-center gap-3 mb-4">
-                                <div className="h-10 w-10 rounded-2xl bg-indigo-50 flex items-center justify-center text-indigo-600">
-                                    <FaShieldAlt />
+                                <div className="h-9 w-9 rounded-lg bg-emerald-50 border border-emerald-100 flex items-center justify-center text-emerald-600">
+                                    <FaShieldAlt size={14} />
                                 </div>
                                 <div>
-                                    <h3 className="text-lg font-bold">Bezpečnost</h3>
-                                    <p className="text-sm text-gray-500">
-                                        Doporučení pro bezpečné používání.
-                                    </p>
+                                    <h3 className="text-sm font-semibold">Bezpečnost</h3>
+                                    <p className="text-xs text-slate-400">Doporučení pro bezpečné používání.</p>
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5">
+                                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                                     <div className="flex items-center gap-2 text-sm font-semibold">
-                                        <FaGoogle className="text-indigo-600" />
+                                        <FaGoogle className="text-emerald-600" />
                                         Google účet
                                     </div>
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        Přístup spravuje Google. Doporučuji zapnout 2FA v Google účtu.
-                                    </p>
+                                    <p className="mt-1 text-xs text-slate-400">Přístup spravuje Google. Doporučuji zapnout 2FA v Google účtu.</p>
                                 </div>
-
-                                <div className="rounded-2xl border border-gray-100 bg-gray-50 p-4">
+                                <div className="rounded-lg border border-slate-200 bg-slate-50 p-4">
                                     <div className="text-sm font-semibold">Odhlášení</div>
-                                    <p className="mt-1 text-sm text-gray-500">
-                                        Odhlásí tě z aplikace. Google účet zůstává přihlášený v prohlížeči dle nastavení.
-                                    </p>
+                                    <p className="mt-1 text-xs text-slate-400">Odhlásí tě z aplikace. Google účet zůstává přihlášený v prohlížeči dle nastavení.</p>
                                 </div>
                             </div>
 
-                            <div className="mt-4 flex flex-col sm:flex-row gap-3">
+                            <div className="mt-3 flex flex-col sm:flex-row gap-2.5">
                                 <button
                                     onClick={() => signOut()}
-                                    className="rounded-2xl bg-indigo-600 hover:bg-indigo-500 px-4 py-3 text-sm font-semibold text-white transition shadow-sm"
+                                    className="rounded-lg bg-slate-900 hover:bg-slate-800 px-4 py-2.5 text-sm font-semibold text-white transition"
                                 >
                                     Odhlásit z aplikace
                                 </button>
-
                                 <button
                                     onClick={() => router.push("/mainpage/settings")}
-                                    className="rounded-2xl border border-gray-200 bg-white hover:bg-gray-50 px-4 py-3 text-sm font-semibold transition"
+                                    className="rounded-lg border border-slate-200 bg-white hover:bg-slate-50 px-4 py-2.5 text-sm font-semibold transition"
                                 >
                                     Upozornění a vzhled
                                 </button>
                             </div>
-                        </section>
+                        </Card>
                     </div>
                 </div>
             </div>

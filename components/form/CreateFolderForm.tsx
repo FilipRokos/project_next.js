@@ -36,7 +36,7 @@ function TreeSelectNode({ folder, folders, depth, selectedId, onSelect }: TreeSe
                 <button
                     type="button"
                     onClick={() => children.length > 0 && setOpen((v) => !v)}
-                    className="p-1 text-gray-300 hover:text-gray-500"
+                    className="p-1 text-slate-300 hover:text-slate-500"
                     style={{ paddingLeft: `${4 + depth * 12}px` }}
                 >
                     {children.length > 0
@@ -47,13 +47,13 @@ function TreeSelectNode({ folder, folders, depth, selectedId, onSelect }: TreeSe
                 <button
                     type="button"
                     onClick={() => onSelect(folder.id)}
-                    className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition text-left ${
+                    className={`flex-1 flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition text-left ${
                         isSelected
-                            ? "bg-indigo-50 text-indigo-600 font-semibold"
-                            : "hover:bg-gray-50 text-gray-700"
+                            ? "bg-emerald-50 text-emerald-700 font-semibold"
+                            : "hover:bg-slate-50 text-slate-700"
                     }`}
                 >
-                    <FaFolder size={12} className="text-amber-400 shrink-0" />
+                    <FaFolder size={11} className="text-amber-400 shrink-0" />
                     <span className="truncate">{folder.name}</span>
                 </button>
             </div>
@@ -77,7 +77,6 @@ export default function CreateFolderForm({ onClose, folders = [], onSubmit }: Pr
     const [parentId, setParentId] = useState<string>("");
 
     const roots = folders.filter((f) => !f.parentId || f.parentId === "");
-
     const selectedPath = parentId ? buildPath(parentId, folders) : "/";
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -104,49 +103,46 @@ export default function CreateFolderForm({ onClose, folders = [], onSubmit }: Pr
 
             {/* Folder name */}
             <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Název složky</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Název složky</label>
                 <input
                     type="text"
                     placeholder="Např. Únor 2025"
                     value={folderName}
                     maxLength={100}
                     onChange={(e) => setFolderName(e.target.value)}
-                    className="w-full border border-gray-200 bg-white px-3 py-2 rounded-xl text-sm outline-none focus:ring-2 focus:ring-indigo-200"
+                    className="w-full border border-slate-200 bg-white px-3 py-2 rounded-lg text-sm outline-none focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 transition"
                     autoFocus
                 />
             </div>
 
             {/* Parent folder select */}
             <div>
-                <label className="text-xs font-semibold text-gray-500 mb-1 block">Umístění</label>
+                <label className="text-xs font-semibold text-slate-500 mb-1.5 block">Umístění</label>
 
-                {/* Selected path */}
-                <div className="flex items-center gap-1.5 text-xs text-gray-500 mb-2 flex-wrap">
-                    <span className="font-medium text-gray-700">Cesta:</span>
+                <div className="flex items-center gap-1 text-xs text-slate-500 mb-2 flex-wrap">
+                    <span className="font-medium text-slate-600">Cesta:</span>
                     {selectedPath.split("/").filter(Boolean).length === 0
-                        ? <span className="text-indigo-500 font-semibold">/ (kořen)</span>
+                        ? <span className="text-emerald-600 font-semibold">/ (kořen)</span>
                         : selectedPath.split("/").filter(Boolean).map((part, i, arr) => (
                             <span key={i} className="flex items-center gap-1">
-                                <FaChevronRight size={8} className="text-gray-300" />
-                                <span className={i === arr.length - 1 ? "text-indigo-500 font-semibold" : ""}>{part}</span>
+                                <FaChevronRight size={7} className="text-slate-300" />
+                                <span className={i === arr.length - 1 ? "text-emerald-600 font-semibold" : ""}>{part}</span>
                             </span>
                         ))
                     }
                 </div>
 
-                {/* Tree */}
-                <div className="border border-gray-200 rounded-xl overflow-auto max-h-40 p-1.5 bg-gray-50">
-                    {/* Root option */}
+                <div className="border border-slate-200 rounded-lg overflow-auto max-h-40 p-1.5 bg-slate-50 scroll-thin">
                     <button
                         type="button"
                         onClick={() => setParentId("")}
-                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-lg text-sm transition text-left ${
+                        className={`w-full flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition text-left ${
                             parentId === ""
-                                ? "bg-indigo-50 text-indigo-600 font-semibold"
-                                : "hover:bg-white text-gray-500"
+                                ? "bg-emerald-50 text-emerald-700 font-semibold"
+                                : "hover:bg-white text-slate-500"
                         }`}
                     >
-                        <FaFolder size={12} className="text-gray-400 shrink-0" />
+                        <FaFolder size={11} className="text-slate-400 shrink-0" />
                         / (kořen)
                     </button>
 
@@ -168,14 +164,14 @@ export default function CreateFolderForm({ onClose, folders = [], onSubmit }: Pr
                 <button
                     type="button"
                     onClick={onClose}
-                    className="px-4 py-2 rounded-xl border border-gray-200 bg-white hover:bg-gray-50 text-gray-700 font-semibold text-sm transition"
+                    className="px-4 py-2 rounded-lg border border-slate-200 bg-white hover:bg-slate-50 text-slate-700 font-semibold text-sm transition"
                 >
                     Zrušit
                 </button>
                 <button
                     type="submit"
                     disabled={!folderName.trim()}
-                    className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white font-semibold text-sm transition disabled:opacity-50"
+                    className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-50 shadow-sm"
                 >
                     Vytvořit
                 </button>

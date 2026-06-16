@@ -1,30 +1,7 @@
 import "server-only";
 import { NextResponse } from "next/server";
-
-async function getMicrosoftAccessToken(): Promise<string> {
-    const res = await fetch(
-        `https://login.microsoftonline.com/${process.env.MICROSOFT_TENANT_ID}/oauth2/v2.0/token`,
-        {
-            method: "POST",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: new URLSearchParams({
-                client_id: process.env.MICROSOFT_CLIENT_ID!,
-                client_secret: process.env.MICROSOFT_CLIENT_SECRET!,
-                grant_type: "client_credentials",
-                scope: "https://graph.microsoft.com/.default",
-            }),
-        }
-    );
-
-    const json = await res.json();
-
-    if (!json.access_token) {
-        console.error("[OneDrive] Token error:", JSON.stringify(json));
-        throw new Error(json.error_description || json.error || "Failed to get Microsoft access token");
-    }
-
-    return json.access_token;
-}
+import { oneDrive } from "@/lib/onedrive";
+import { uniqueFilename } from "@/lib/filename";
 
 export async function POST(req: Request) {
     const form = await req.formData();
@@ -40,12 +17,17 @@ export async function POST(req: Request) {
     }
 
     try {
-        const accessToken = await getMicrosoftAccessToken();
+        // Read + refresh the stored token (rotates the refresh token automatically)
+        const accessToken = await oneDrive.getAccessToken();
 
         const buffer = await file.arrayBuffer();
 
+        // Delegated token => upload into the app's own folder (approot).
+        // Lands in OneDrive/Aplikace/onedrive-Uploader/<filename>
+        // Unikátní název podle času + náhodného tokenu, ať se nic nepřepíše.
+        const safeName = encodeURIComponent(uniqueFilename(filename));
         const uploadRes = await fetch(
-            `https://graph.microsoft.com/v1.0/users/${process.env.MICROSOFT_USER_ID}/drive/root:/uploads/${filename}:/content`,
+            `https://graph.microsoft.com/v1.0/me/drive/special/approot:/${safeName}:/content`,
             {
                 method: "PUT",
                 headers: {
@@ -59,14 +41,17 @@ export async function POST(req: Request) {
         if (!uploadRes.ok) {
             const err = await uploadRes.json();
             console.error("[Collector] Graph error:", JSON.stringify(err));
-            throw new Error(JSON.stringify(err?.error) || "Upload selhal");
+            throw new Error(err?.error?.message || "Upload selhal");
         }
 
         const data = await uploadRes.json();
 
-        return NextResponse.json({ success: true, fileId: data.id, name: data.name }, { status: 200 });
+        return NextResponse.json(
+            { success: true, fileId: data.id, name: data.name, webUrl: data.webUrl },
+            { status: 200 }
+        );
     } catch (err: any) {
-        console.error("[Collector] Error:", err.message);
-        return NextResponse.json({ error: err.message ?? "Něco se pokazilo", debug: err.message }, { status: 500 });
+        console.error("[Collector] Error:", err?.message);
+        return NextResponse.json({ error: err?.message ?? "Něco se pokazilo" }, { status: 500 });
     }
 }
