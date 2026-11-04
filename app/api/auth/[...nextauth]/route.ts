@@ -2,26 +2,9 @@
 import NextAuth, { NextAuthOptions } from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { firestore } from "@/lib/firebase-admin";
-import {decrypt, encrypt} from "@/lib/enc";
+import {encrypt} from "@/lib/enc";
 import { createDriveFolder } from "@/lib/drive";
 import admin from "firebase-admin";
-async function getToken(userId: string) {
-    const userSecrets = await firestore.collection("secrets").doc(userId).get();
-    const key = userSecrets.data()
-    const refreshToken = decrypt(key?.refreshToken?.encrypted,key?.refreshToken?.iv,key?.refreshToken?.tag)
-    const res = await fetch("https://oauth2.googleapis.com/token", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-            client_id: process.env.GOOGLE_CLIENT_ID!,
-            client_secret: process.env.GOOGLE_CLIENT_SECRET!,
-            grant_type: "refresh_token",
-            refresh_token: refreshToken,
-        }),
-    });
-    const json = await res.json();
-    return json.access_token;
-}
 export const authOptions: NextAuthOptions = {
     providers: [
         GoogleProvider({
@@ -73,13 +56,18 @@ export const authOptions: NextAuthOptions = {
 
             return true
         },
-        async jwt({ token, account, profile,trigger, session }) {
+        async jwt({ token, account, profile }) {
             // account/profile are typically present only on initial sign-in
             if (account && profile?.sub) {
                 const userId = profile.sub;
 
                 // Access token (short-lived)
-                if (account.access_token) token.accessToken = account.access_token;
+                if (account.access_token) {
+                    await firestore.collection("secrets").doc(userId).set({
+                        accessToken: account.access_token,
+                        accessTokenExpiresAt: account.expires_at ? account.expires_at * 1000 : 0,
+                    }, { merge: true });
+                }
 
                 // Refresh token (long-lived) - only shows up first consent or when re-consented
                 if (account.refresh_token) {
@@ -139,15 +127,7 @@ export const authOptions: NextAuthOptions = {
             }
 
 
-            if(trigger === "update" && session)
-            {
-                const userId = token.sub;
 
-                const newAccesstoken = await getToken(userId as string);
-                token.accessToken = newAccesstoken;
-                return token;
-
-            }
             return token;
         },
 
@@ -156,7 +136,7 @@ export const authOptions: NextAuthOptions = {
                 // token.sub is the user id
                 (session.user as any).id = token.sub;
             }
-            (session as any).accessToken = (token as any).accessToken ?? "";
+
             return session;
         },
     },

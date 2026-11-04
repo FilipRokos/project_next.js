@@ -2,7 +2,7 @@
 
 import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import Webcam from "react-webcam";
-import { useSession } from "next-auth/react";
+
 
 type Props = {
     userId: string;
@@ -47,7 +47,7 @@ export default function ImageDropUpload({
     const [dragOver, setDragOver] = useState(false);
     const [loading, setLoading] = useState(false);
 
-    const { data: session, update } = useSession();
+
 
     const webcamRef = useRef<Webcam | null>(null);
 
@@ -155,17 +155,6 @@ export default function ImageDropUpload({
 
         try {
             setLoading(true);
-
-            if (session?.accessToken) {
-                const checkRes = await fetch(
-                    `https://oauth2.googleapis.com/tokeninfo?access_token=${session.accessToken}`
-                );
-                const tokeninfo = await checkRes.json();
-
-                if ((tokeninfo.expires_in as number) < 30 || tokeninfo.error === "invalid_token") {
-                    await update({});
-                }
-            }
 
             const res = await fetch("/api/firestore/Files", {
                 method: "POST",

@@ -1,3 +1,4 @@
+import { getGoogleAccessToken, GoogleTokenError } from "@/lib/google-token";
 import "server-only";
 import {firestore} from "@/lib/firebase-admin";
 import {google} from "googleapis";
@@ -10,11 +11,14 @@ export async function POST(req: Request) {
     const session = await getServerSession(authOptions);
 
 
+    const userId = session?.user?.id;
+    if (!userId) return NextResponse.json({ error: "Please sign in again.", code: "REAUTH_REQUIRED" }, { status: 401 });
+    try {
     const form = await req.formData();
     const file = form.get("file");
     const path = form.get("path");
     const filename = form.get("filename") as string;
-    const userId = form.get("userId") as string;
+
     const parentId = form.get("parentId") as string;
     console.log(form)
 
@@ -26,7 +30,7 @@ export async function POST(req: Request) {
         return Response.json({ error: "No file uploaded" }, { status: 400 });
     }
     const userData = userDoc.data();
-    const accessToken = session?.accessToken;
+    const accessToken = await getGoogleAccessToken(userId);
     const rootfolderId = userData?.drive?.rootFolderId;
     const oauth2 = new google.auth.OAuth2();
     oauth2.setCredentials({ access_token: accessToken });
@@ -85,6 +89,13 @@ export async function POST(req: Request) {
         },
         { status: 200 }
     );
+    } catch (error) {
+        if (error instanceof GoogleTokenError) {
+            return NextResponse.json({ error: error.message, code: error.code },
+                { status: error.code === "REAUTH_REQUIRED" ? 401 : 503 });
+        }
+        return NextResponse.json({ error: "Upload failed. Please retry." }, { status: 503 });
+    }
 }
 export async function GET(req: Request) {
     const session = await getServerSession(authOptions);
