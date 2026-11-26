@@ -188,7 +188,11 @@ export default function ImageDropUpload({
             setMessage("Vytvářím výřez…");
             const receipt = await extractReceipt(selected.image, selected.polygon);
             if (generation.current !== id) return;
-            const extractedFile = new File([receipt], finalName, { type: "image/png" });
+            const extractedFile = new File([receipt], finalName, { type: receipt.type });
+            console.table([
+                { stage: "Selected image", type: file?.type, bytes: file?.size },
+                { stage: "Final upload to /api/firestore/Files", type: extractedFile.type, bytes: extractedFile.size },
+            ]);
             const formData = new FormData();
             formData.append("file", extractedFile);
             formData.append("filename", finalName);

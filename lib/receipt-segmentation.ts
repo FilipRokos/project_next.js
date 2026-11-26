@@ -36,7 +36,7 @@ export function polygonGeometry(points: Point[], width: number, height: number) 
 }
 
 export function receiptFilename(name: string) {
-    return (name.trim().replace(/\.(png|jpe?g|webp|gif)$/i, "") || "uctenka") + ".png";
+    return (name.trim().replace(/\.(png|jpe?g|webp|gif)$/i, "") || "uctenka") + ".webp";
 }
 
 function receiptPath(pixels: Point[]) {
@@ -70,6 +70,6 @@ export async function extractReceipt(image: ImageBitmap, polygon: Point[]) {
         ctx.translate(-g.left, -g.top);
         ctx.clip(path);
         ctx.drawImage(image, 0, 0);
-        return await new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob ? resolve(blob) : reject(new Error("Výřez nelze uložit.")), "image/png"));
+        return await new Promise<Blob>((resolve, reject) => canvas.toBlob(blob => blob?.type === "image/webp" ? resolve(blob) : reject(new Error("Výřez nelze uložit.")), "image/webp", 0.9));
     } finally { canvas.width = 0; canvas.height = 0; }
 }

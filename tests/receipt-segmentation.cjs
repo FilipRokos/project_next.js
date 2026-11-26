@@ -38,12 +38,12 @@ const { chromium } = require('playwright');
   image.close();output.close();oriented.close();
   return {previewExports,filename:receiptFilename("Nákup 5.11.2026"),pngName:receiptFilename("Receipt.PNG"),invalid,empty:empty.detected,inside,outside,blue,orientation,size:[read.width,read.height],mime:blob.type,clamp:polygonGeometry([[-.1,0],[1.1,0],[0,1.1]],100,100)};
  },Array.from(jpeg));
- assert.equal(result.previewExports,0);assert.equal(result.filename,"Nákup 5.11.2026.png");assert.equal(result.pngName,"Receipt.png");
+ assert.equal(result.previewExports,0);assert.equal(result.filename,"Nákup 5.11.2026.webp");assert.equal(result.pngName,"Receipt.webp");
  assert.equal(result.invalid,true);assert.equal(result.empty,false);
- assert.deepEqual(result.size,[80,80]);assert.equal(result.mime,'image/png');
- assert.deepEqual(result.inside,[200,100,50,255]);assert.equal(result.outside[3],0);
+ assert.deepEqual(result.size,[80,80]);assert.equal(result.mime,'image/webp');
+ assert.ok(result.inside.every((v,i)=>Math.abs(v-[200,100,50,255][i])<=3));assert.equal(result.outside[3],0);
  assert.notDeepEqual(result.blue,result.inside);assert.deepEqual(result.orientation,[40,80]);
  assert.equal(result.clamp.width,100);assert.equal(result.clamp.height,100);
- console.log('PASS: contract, no detection, degenerate polygon, normalized mapping, crop/clamp, polygon transparency, overlay exclusion, EXIF orientation');
+ console.log('PASS: contract, no detection, degenerate polygon, normalized mapping, crop/clamp, transparent crop background, overlay exclusion, EXIF orientation');
  } finally { await browser.close(); }
 })().catch(e=>{console.error(e);process.exitCode=1});
