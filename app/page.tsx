@@ -1,7 +1,20 @@
 "use client";
 
 import { signIn, useSession } from "next-auth/react";
-import React from "react";
+import React, { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+
+function ReconnectNotice() {
+    const params = useSearchParams();
+    if (params.get("reason") !== "google-reconnect") return null;
+    return (
+        <div role="status" className="mx-auto max-w-6xl px-6 pt-6">
+            <p className="rounded-lg border border-amber-200 bg-amber-50 p-4 text-sm text-amber-900">
+                Přístup ke Google Drive vypršel. Přihlas se prosím znovu. Neuloženou účtenku bude potřeba znovu vybrat.
+            </p>
+        </div>
+    );
+}
 
 export default function Home() {
     const { status } = useSession();
@@ -16,6 +29,9 @@ export default function Home() {
 
     return (
         <div className="min-h-screen bg-slate-50 text-slate-900">
+            <Suspense fallback={null}>
+                <ReconnectNotice />
+            </Suspense>
 
             {/* Nav */}
             <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/85 backdrop-blur">

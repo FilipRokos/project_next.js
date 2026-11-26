@@ -48,6 +48,11 @@ async function loadToken(userId: string): Promise<string> {
     });
     const data = await response.json();
     if (!response.ok) {
+        console.error("Google token refresh failed", {
+            status: response.status,
+            error: data.error,
+            description: data.error_description,
+        });
         throw new GoogleTokenError(response.status === 400 && data.error === "invalid_grant"
             ? "REAUTH_REQUIRED" : "TOKEN_RETRY");
     }

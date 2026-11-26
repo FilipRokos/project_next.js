@@ -1,18 +1,20 @@
 "use client";
 
-import React, { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import Webcam from "react-webcam";
+import { signOut } from "next-auth/react";
+import { MAX_IMAGE_BYTES, MAX_IMAGE_PIXELS, parseSegmentation, drawReceiptPreview, extractReceipt, receiptFilename, type Point } from "@/lib/receipt-segmentation";
 
 
 type Props = {
     userId: string;
     path?: string;
-    onUploaded?: (data: any) => void;
+    onUploaded?: (data: { success?: boolean; id?: string; webViewLink?: string }) => void;
     onClose?: () => void;
     parentId: string;
 };
 
-const ACCEPTED = ["image/png", "image/jpeg", "image/webp", "image/gif"];
+const ACCEPTED = ["image/png", "image/jpeg"];
 
 function dataUrlToFile(dataUrl: string, filenameBase: string) {
     const [meta, b64] = dataUrl.split(",");
@@ -55,29 +57,64 @@ export default function ImageDropUpload({
     const [captured, setCaptured] = useState<string | null>(null);
     const [facingMode, setFacingMode] = useState<"user" | "environment">("environment");
 
-    const previewUrl = useMemo(() => {
-        if (!file) return null;
-        return URL.createObjectURL(file);
-    }, [file]);
-
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const uploadLock = useRef(false);
+    const signingOut = useRef(false);
+    const generation = useRef(0);
+    const [retry, setRetry] = useState(0);
+    const selection = useRef<{ image: ImageBitmap; polygon: Point[] } | null>(null);
+    const [status, setStatus] = useState("loading");
+    const [message, setMessage] = useState("");
     useEffect(() => {
-        if (!previewUrl) return;
-        return () => URL.revokeObjectURL(previewUrl);
-    }, [previewUrl]);
+        const id = ++generation.current;
+        const controller = new AbortController();
+        let image: ImageBitmap | undefined;
+        if (!file) return;
+        const current = () => !controller.signal.aborted && generation.current === id;
+        void (async () => {
+            try {
+                const body = new FormData(); body.append("file", file);
+                const response = await fetch("/api/receipts/segment", { method: "POST", body, signal: controller.signal });
+                const data = await response.json();
+                if (!response.ok) throw new Error(data.error || "Segmentace selhala.");
+                const result = parseSegmentation(data);
+                if (!current()) return;
+                image = await createImageBitmap(file, { imageOrientation: "from-image" });
+                if (!current()) return;
+                if (image.width * image.height > MAX_IMAGE_PIXELS) throw new Error("Překročen limit 25 milionů pixelů.");
+                const canvas = canvasRef.current;
+                if (!canvas) return;
+                canvas.width = image.width; canvas.height = image.height;
+                canvas.getContext("2d")!.drawImage(image, 0, 0);
+                if (!result.detected) { setStatus("empty"); setMessage("Účtenka nebyla nalezena. Zkus jiný obrázek nebo opakuj hledání."); return; }
+                drawReceiptPreview(image, result.polygon, canvas);
+                if (!current()) return;
+                selection.current = { image, polygon: result.polygon };
+                setStatus("ready"); setMessage("Zkontroluj označenou účtenku.");
+            } catch (error) {
+                if (current()) { setStatus("error"); setMessage(error instanceof Error ? error.message : "Segmentace selhala."); }
+            } finally { if (image !== selection.current?.image) image?.close(); }
+        })();
+        return () => { controller.abort(); generation.current = id + 1; image?.close(); selection.current = null; };
+    }, [file, retry]);
 
     const setImage = useCallback(
         (f: File | null) => {
-            if (!f) return;
+            if (!f || uploadLock.current) return;
 
             if (!ACCEPTED.includes(f.type)) {
-                alert("Prosím nahraj obrázek (png, jpg, webp, gif).");
+                alert("Prosím nahraj obrázek JPEG nebo PNG.");
                 return;
             }
 
+            if (f.size > MAX_IMAGE_BYTES) { alert("Maximální velikost je 15 MiB."); return; }
+            generation.current++; selection.current = null; setStatus("loading");
+            setMessage("Hledám účtenku…");
+            if (canvasRef.current) { canvasRef.current.width = 0; canvasRef.current.height = 0; }
             setFile(f);
 
             if (!filename.trim()) {
-                const base = f.name.replace(/\.[^/.]+$/, "");
+                const base = f.name.replace(/\.(png|jpe?g|webp|gif)$/i, "");
                 setFilename(base);
             }
 
@@ -100,6 +137,8 @@ export default function ImageDropUpload({
     };
 
     const clear = () => {
+        if (uploadLock.current) return;
+        generation.current++; selection.current = null;
         setFile(null);
         setFilename("");
         setCaptured(null);
@@ -125,7 +164,7 @@ export default function ImageDropUpload({
 
     const useCaptured = () => {
         if (!captured) return;
-        const base = (filename.trim() || `uctenka-${Date.now()}`).replace(/\.[^/.]+$/, "");
+        const base = (filename.trim() || `uctenka-${Date.now()}`).replace(/\.(png|jpe?g|webp|gif)$/i, "");
         const f = dataUrlToFile(captured, base);
         setImage(f);
     };
@@ -133,29 +172,30 @@ export default function ImageDropUpload({
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 
+        if (uploadLock.current || status !== "ready" || !selection.current) return;
         if (!file) return alert("Přetáhni / vyber obrázek nebo vyfoť.");
         if (!filename.trim()) return alert("Zadej název souboru.");
         if (filename.trim().length > 100) return alert("Název může mít maximálně 100 znaků.");
         if (!userId) return alert("Chybí userId (session).");
         if (!path) return alert("Chybí path.");
 
-        const originalExt = file.name.includes(".") ? file.name.split(".").pop() : "";
-        const inputName = filename.trim();
-        const hasExt =
-            originalExt && inputName.toLowerCase().endsWith("." + originalExt.toLowerCase());
-
-        const finalName = originalExt ? (hasExt ? inputName : `${inputName}.${originalExt}`) : inputName;
-
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("filename", finalName);
-        formData.append("path", String(path));
-        formData.append("userId", String(userId));
-        formData.append("parentId", String(parentId));
-
+        const selected = selection.current;
+        const id = generation.current;
+        const finalName = receiptFilename(filename);
         try {
+            uploadLock.current = true;
             setLoading(true);
-
+            setMessage("Vytvářím výřez…");
+            const receipt = await extractReceipt(selected.image, selected.polygon);
+            if (generation.current !== id) return;
+            const extractedFile = new File([receipt], finalName, { type: "image/png" });
+            const formData = new FormData();
+            formData.append("file", extractedFile);
+            formData.append("filename", finalName);
+            formData.append("path", String(path));
+            formData.append("userId", String(userId));
+            formData.append("parentId", String(parentId));
+            setMessage("Nahrávám účtenku…");
             const res = await fetch("/api/firestore/Files", {
                 method: "POST",
                 body: formData,
@@ -172,18 +212,35 @@ export default function ImageDropUpload({
                 })()
                 : {};
 
+            if (generation.current !== id) return;
+            if (res.status === 401 && data?.code === "REAUTH_REQUIRED") {
+                signingOut.current = true;
+                setMessage("Přístup ke Google Drive vypršel. Odhlašuji…");
+                try {
+                    await signOut({ callbackUrl: "/?reason=google-reconnect" });
+                } catch {
+                    signingOut.current = false;
+                    throw new Error("Odhlášení se nezdařilo. Zkus to prosím znovu.");
+                }
+                return;
+            }
             if (!res.ok) {
-                throw new Error((data as any)?.error || (data as any)?.message || "Chyba při uploadu");
+                throw new Error(data?.error || data?.message || "Chyba při uploadu");
             }
 
+            if (generation.current !== id) return;
             onUploaded?.(data);
             alert("Obrázek nahrán!");
+            uploadLock.current = false;
             clear();
             onClose?.();
-        } catch (err: any) {
-            alert(err?.message ?? "Něco se pokazilo.");
+        } catch (err: unknown) {
+            if (generation.current === id) setMessage(err instanceof Error ? err.message : "Uložení selhalo. Zkus to znovu.");
         } finally {
-            setLoading(false);
+            if (!signingOut.current) {
+                uploadLock.current = false;
+                setLoading(false);
+            }
         }
     };
 
@@ -208,7 +265,7 @@ export default function ImageDropUpload({
                     dragOver ? "border-emerald-500 bg-emerald-50" : "border-slate-200 bg-slate-50",
                 ].join(" ")}
             >
-                <input id="image" type="file" accept="image/*" onChange={onPick} className="hidden" />
+                <input id="image" type="file" accept="image/jpeg,image/png" onChange={onPick} className="hidden" />
 
                 {mode === "camera" && (
                     <div className="flex flex-col gap-3 items-center">
@@ -313,21 +370,15 @@ export default function ImageDropUpload({
                             Vyfotit účtenku
                         </button>
 
-                        <p className="text-[11px] text-slate-400">png, jpg, webp, gif</p>
+                        <p className="text-[11px] text-slate-400">JPEG, PNG · max. 15 MiB</p>
                     </div>
                 )}
 
                 {mode === "idle" && file && (
                     <div className="flex flex-col gap-3 items-center">
-                        {previewUrl && (
-                            // eslint-disable-next-line @next/next/no-img-element
-                            <img
-                                src={previewUrl}
-                                alt="preview"
-                                className="max-h-48 rounded-lg border border-slate-200 object-contain bg-white"
-                            />
-                        )}
-
+                        <canvas ref={canvasRef} aria-label="Vybraná účtenka" className="max-h-72 max-w-full h-auto rounded-lg border border-slate-200" />
+                        <p role="status" className="text-sm text-slate-600">{message}</p>
+                        {(status === "error" || status === "empty") && <button type="button" onClick={() => { generation.current++; selection.current = null; setStatus("loading"); setMessage("Hledám účtenku…"); setRetry(n => n + 1); }} className="text-sm text-emerald-600 underline">Zkusit znovu</button>}
                         <div className="text-sm text-slate-600 text-left w-full">
                             <div className="truncate">
                                 <span className="font-semibold text-slate-800">Soubor:</span> {file.name}
@@ -366,10 +417,10 @@ export default function ImageDropUpload({
                 </button>
                 <button
                     type="submit"
-                    disabled={loading}
+                    disabled={loading || status !== "ready"}
                     className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-sm transition disabled:opacity-50 shadow-sm"
                 >
-                    {loading ? "Nahrávám..." : "Nahrát"}
+                    {loading ? "Ukládám..." : "Potvrdit a uložit"}
                 </button>
             </div>
         </form>

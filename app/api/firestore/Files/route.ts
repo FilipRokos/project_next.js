@@ -91,6 +91,7 @@ export async function POST(req: Request) {
     );
     } catch (error) {
         if (error instanceof GoogleTokenError) {
+            console.log("google");
             return NextResponse.json({ error: error.message, code: error.code },
                 { status: error.code === "REAUTH_REQUIRED" ? 401 : 503 });
         }
