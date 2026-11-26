@@ -18,7 +18,7 @@ export function encrypt(text: string) {
         tag,
     };
 }
-
+//
 export function decrypt(encrypted: string, iv: string, tag: string) {
     const decipher = crypto.createDecipheriv(
         algorithm,
